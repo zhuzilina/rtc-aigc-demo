@@ -49,7 +49,7 @@ function View() {
           navigate(`/login?roomId=${roomId}`);
         }
       } else {
-        navigate(`/login`);
+        navigate('/login');
       }
     } else if (!room.roomId) {
       (async () => {
