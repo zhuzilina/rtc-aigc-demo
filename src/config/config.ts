@@ -4,13 +4,8 @@
  */
 
 import { AudioProfileType } from '@volcengine/rtc';
-import 活泼女声 from '@/assets/img/huoponvsheng.jpeg';
 import 通用女声 from '@/assets/img/tongyongnvsheng.jpeg';
 import 通用男声 from '@/assets/img/tongyongnansheng.jpeg';
-import 纨绔青年 from '@/assets/img/wankuqingnian.jpeg';
-import 京腔侃爷 from '@/assets/img/jingqiangkanye.jpeg';
-import 湾湾小何 from '@/assets/img/wanwanxiaohe.jpeg';
-import 温暖阿虎 from '@/assets/img/wennuanahu.jpeg';
 
 export enum ModelSourceType {
   Custom = 'Custom',
@@ -42,11 +37,7 @@ export const AudioProfile = [
 export enum VOICE_TYPE {
   '通用女声' = 'BV001_streaming',
   '通用男声' = 'BV002_streaming',
-  '纨绔青年' = 'BV159_streaming',
-  '活泼女声' = 'BV005_streaming',
-  '京腔侃爷' = 'zh_male_jingqiangkanye_moon_bigtts',
-  '温暖阿虎' = 'zh_male_wennuanahu_moon_bigtts',
-  '湾湾小何' = 'zh_female_wanwanxiaohe_moon_bigtts',
+  // ... 可根据所开通的音色进行扩充
 }
 
 export const VOICE_INFO_MAP = {
@@ -59,31 +50,6 @@ export const VOICE_INFO_MAP = {
     description: '男声 青年 语音合成 通用场景',
     url: '',
     icon: 通用男声,
-  },
-  [VOICE_TYPE['纨绔青年']]: {
-    description: '男声 青年 语音合成 通用场景',
-    url: '',
-    icon: 纨绔青年,
-  },
-  [VOICE_TYPE['活泼女声']]: {
-    description: '女声 青年 语音合成 通用场景',
-    url: '',
-    icon: 活泼女声,
-  },
-  [VOICE_TYPE['京腔侃爷']]: {
-    description: '男声 青年 大模型语音合成 通用场景',
-    url: '',
-    icon: 京腔侃爷,
-  },
-  [VOICE_TYPE['温暖阿虎']]: {
-    description: '男声 青年 大模型语音合成 通用场景',
-    url: '',
-    icon: 温暖阿虎,
-  },
-  [VOICE_TYPE['湾湾小何']]: {
-    description: '女声 青年 大模型语音合成 通用场景',
-    url: '',
-    icon: 湾湾小何,
   },
 };
 
@@ -133,10 +99,9 @@ export enum PROMPT_MAP {
 export enum AI_MODEL {
   DOUBAO_LITE_4K = 'Doubao-lite-4k(character-240515)',
   DOUBAO_PRO_4K = 'Doubao-pro-4k(character-240515)',
-  DOUBAO_PRO_4K_ONLINE = 'Doubao-pro-4k(character-240515)[联网版]',
-  DOUBAO_PRO_4K_KNOWLEDGE = 'Doubao-pro-4k(character-240515)[知识库]',
   DOUBAO_PRO_32K = 'Doubao-pro-32k',
   DOUBAO_PRO_128K = 'Doubao-pro-128k',
+  // ... 可根据所开通的模型进行扩充
 }
 
 /**
@@ -154,8 +119,6 @@ export enum AI_MODEL_MODE {
 export const AI_MODE_MAP = {
   [AI_MODEL.DOUBAO_LITE_4K]: AI_MODEL_MODE.ARK_V2,
   [AI_MODEL.DOUBAO_PRO_4K]: AI_MODEL_MODE.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_4K_ONLINE]: AI_MODEL_MODE.ARK_V3,
-  [AI_MODEL.DOUBAO_PRO_4K_KNOWLEDGE]: AI_MODEL_MODE.ARK_V3,
   [AI_MODEL.DOUBAO_PRO_32K]: AI_MODEL_MODE.ARK_V3,
   [AI_MODEL.DOUBAO_PRO_128K]: AI_MODEL_MODE.ARK_V3,
 };
@@ -168,26 +131,22 @@ export const AI_MODE_PROMPT = {
   [AI_MODEL.DOUBAO_PRO_4K]: PROMPT.ARK_V2,
   [AI_MODEL.DOUBAO_PRO_32K]: PROMPT.ARK_V2,
   [AI_MODEL.DOUBAO_PRO_128K]: PROMPT.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_4K_ONLINE]: PROMPT.ARK_V3,
-  [AI_MODEL.DOUBAO_PRO_4K_KNOWLEDGE]: PROMPT.ARK_V3,
 };
 
 /**
  * @brief 豆包模型的 ID
  */
 export const ARK_V2_MODEL_ID: Record<AI_MODEL, string> = {
-  [AI_MODEL.DOUBAO_LITE_4K]: 'ep-20240619074755-rjmhw',
-  [AI_MODEL.DOUBAO_PRO_4K]: 'ep-20240711111549-rhs7g',
-  [AI_MODEL.DOUBAO_PRO_32K]: 'ep-20240828154651-wjj7g',
-  [AI_MODEL.DOUBAO_PRO_128K]: 'ep-20240830105345-hghn6',
-  [AI_MODEL.DOUBAO_PRO_4K_ONLINE]: '',
-  [AI_MODEL.DOUBAO_PRO_4K_KNOWLEDGE]: '',
+  [AI_MODEL.DOUBAO_LITE_4K]: '',
+  [AI_MODEL.DOUBAO_PRO_4K]: '',
+  [AI_MODEL.DOUBAO_PRO_32K]: '',
+  [AI_MODEL.DOUBAO_PRO_128K]: '',
+  // ... 可根据所开通的模型进行扩充
 };
 
 /**
  * @brief 豆包模型 BotID
  */
 export const LLM_BOT_ID = {
-  [AI_MODEL.DOUBAO_PRO_4K_ONLINE]: 'bot-20240716132056-xxf7l',
-  [AI_MODEL.DOUBAO_PRO_4K_KNOWLEDGE]: 'bot-20240718093727-76hl2',
+  // ... 可根据所开通的模型进行扩充
 };
