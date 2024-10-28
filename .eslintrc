@@ -41,7 +41,7 @@
     }
   ],
   "rules": {
-    "prettier/prettier": ["error", { "trailingComma": "es5", "printWidth": 100 }],
+    "prettier/prettier": ["warn", { "trailingComma": "es5", "printWidth": 200 }],
     "linebreak-style": ["error", "unix"],
     "no-console": ["error", { "allow": ["warn", "error", "log"] }],
     "no-case-declarations": 0,

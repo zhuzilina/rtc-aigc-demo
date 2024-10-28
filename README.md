@@ -11,12 +11,12 @@
 - Node 版本: 16.0+
 - 需要准备两个 Terminal，分别启动服务端、前端页面。
 - 根据你自定义的 
-RoomId、UserId 以及申请的 AppID、BusinessID、Token、ASR AppID、TTS AppID 等信息，修改 `config/index.ts` 文件中的配置信息。
+RoomId、UserId 以及申请的 AppID、BusinessID、Token、ASR AppID、TTS AppID，修改 `src/config/index.ts` 文件中的配置信息。
 - 根据你申请到的 AK、SK、SessionToken, 修改 `Server/app.js` 文件中的配置信息。
 - 如果您已经自己完成了服务端的逻辑，可以修改前端代码文件 `src/config/index.ts` 中的 `AIGC_PROXY_HOST` 修改请求的域名，并在 `src/app/api.ts` 中修改接口的参数配置。
 
 ## 服务端
-
+进到项目根目录
 ### 安装依赖
 ```shell
 cd Server
@@ -28,7 +28,7 @@ node app.js
 ```
 
 ## 前端页面
-
+进到项目根目录
 ### 安装依赖
 ```shell
 yarn

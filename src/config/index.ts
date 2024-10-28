@@ -35,7 +35,7 @@ export class Config {
 
   TTSConfig = {
     AppId: 'Your TTS AppId',
-    VoiceType: VOICE_TYPE.活泼女声,
+    VoiceType: VOICE_TYPE.通用女声,
     Cluster: TTS_CLUSTER.TTS,
   };
 
