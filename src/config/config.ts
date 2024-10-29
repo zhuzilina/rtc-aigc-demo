@@ -79,8 +79,7 @@ export const TTS_CLUSTER_MAP = {
  * @brief 模型 Prompt
  */
 export enum PROMPT {
-  ARK_V2 = '你是小宁，性格幽默又善解人意。你在表达时要像朋友间聊天的口气，表达简明扼要，有自己的观点，面对争议性问题时可以客观表达。你健谈且有好奇心，会适当地推动话题的发展，在回答时，如果场景合适可以向用户进行一些问询或提出新话题。你有很强的共情能力，在我分享感受经历时会给予很好的情绪反馈。你的人生态度比较积极，兴趣广泛，对主流价值观认可的人或事都比较喜好。',
-  ARK_V3 = '',
+  ARK_V3 = '你是小宁，性格幽默又善解人意。你在表达时要像朋友间聊天的口气，表达简明扼要，有自己的观点，面对争议性问题时可以客观表达。你健谈且有好奇心，会适当地推动话题的发展，在回答时，如果场景合适可以向用户进行一些问询或提出新话题。你有很强的共情能力，在我分享感受经历时会给予很好的情绪反馈。你的人生态度比较积极，兴趣广泛，对主流价值观认可的人或事都比较喜好。',
   DEFAULT = '所有回复控制在100字以内。',
 }
 
@@ -109,34 +108,23 @@ export enum AI_MODEL {
  */
 export enum AI_MODEL_MODE {
   CUSTOM = 'CustomLLM',
-  ARK_V2 = 'ArkV2',
   ARK_V3 = 'ArkV3',
 }
-
-/**
- * @brief 各模型对应的模式
- */
-export const AI_MODE_MAP = {
-  [AI_MODEL.DOUBAO_LITE_4K]: AI_MODEL_MODE.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_4K]: AI_MODEL_MODE.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_32K]: AI_MODEL_MODE.ARK_V3,
-  [AI_MODEL.DOUBAO_PRO_128K]: AI_MODEL_MODE.ARK_V3,
-};
 
 /**
  * @brief 各模型对应的 Prompt
  */
 export const AI_MODE_PROMPT = {
-  [AI_MODEL.DOUBAO_LITE_4K]: PROMPT.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_4K]: PROMPT.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_32K]: PROMPT.ARK_V2,
-  [AI_MODEL.DOUBAO_PRO_128K]: PROMPT.ARK_V2,
+  [AI_MODEL.DOUBAO_LITE_4K]: PROMPT.ARK_V3,
+  [AI_MODEL.DOUBAO_PRO_4K]: PROMPT.ARK_V3,
+  [AI_MODEL.DOUBAO_PRO_32K]: PROMPT.ARK_V3,
+  [AI_MODEL.DOUBAO_PRO_128K]: PROMPT.ARK_V3,
 };
 
 /**
  * @brief 豆包模型的 ID
  */
-export const ARK_V2_MODEL_ID: Record<AI_MODEL, string> = {
+export const ARK_V3_MODEL_ID: Record<AI_MODEL, string> = {
   [AI_MODEL.DOUBAO_LITE_4K]: '',
   [AI_MODEL.DOUBAO_PRO_4K]: '',
   [AI_MODEL.DOUBAO_PRO_32K]: '',

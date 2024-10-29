@@ -64,7 +64,7 @@ function AISettingDrawerButton() {
       LLMConfig: {
         ModelName: formValues.modelName,
         WelcomeSpeech: formValues.welcomeSpeech,
-        Mode: AI_MODEL_MODE.ARK_V2,
+        Mode: AI_MODEL_MODE.ARK_V3,
         EndPointId: '',
         SystemMessages: [formValues.prompt],
         ModeSourceType: ModelSourceType.Available,

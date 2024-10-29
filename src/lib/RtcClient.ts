@@ -21,8 +21,7 @@ import RTCAIAnsExtension from '@volcengine/rtc/extension-ainr';
 import openAPIs from '@/app/api';
 import aigcConfig, {
   AI_MODEL,
-  AI_MODE_MAP,
-  ARK_V2_MODEL_ID,
+  ARK_V3_MODEL_ID,
   ModelSourceType,
   AI_MODEL_MODE,
   LLM_BOT_ID,
@@ -269,8 +268,8 @@ export class RTCClient {
         LLMConfig: {
           ...mergedConfigs.LLMConfig,
           Mode:
-            modeSourceType === ModelSourceType.Custom ? AI_MODEL_MODE.CUSTOM : AI_MODE_MAP[model],
-          EndPointId: ARK_V2_MODEL_ID[model],
+            modeSourceType === ModelSourceType.Custom ? AI_MODEL_MODE.CUSTOM : AI_MODEL_MODE.ARK_V3,
+          EndPointId: ARK_V3_MODEL_ID[model],
           BotId: (LLM_BOT_ID as Record<string, string>)[model],
         },
       },

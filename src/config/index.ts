@@ -4,9 +4,9 @@
  */
 import {
   AI_MODEL,
-  AI_MODE_MAP,
+  AI_MODEL_MODE,
   AI_MODE_PROMPT,
-  ARK_V2_MODEL_ID,
+  ARK_V3_MODEL_ID,
   ModelSourceType,
   TTS_CLUSTER,
   VOICE_TYPE,
@@ -41,11 +41,11 @@ export class Config {
 
   LLMConfig = {
     ModelName: AI_MODEL.DOUBAO_LITE_4K,
-    Mode: AI_MODE_MAP[AI_MODEL.DOUBAO_LITE_4K],
+    Mode: AI_MODEL_MODE.ARK_V3,
     ModelVersion: '1.0',
     WelcomeSpeech: '欢迎使用火山引擎视频云 RTC 驱动的虚拟人大模型',
     SystemMessages: [AI_MODE_PROMPT[AI_MODEL.DOUBAO_LITE_4K]],
-    EndPointId: ARK_V2_MODEL_ID[AI_MODEL.DOUBAO_LITE_4K],
+    EndPointId: ARK_V3_MODEL_ID[AI_MODEL.DOUBAO_LITE_4K],
 
     ModeSourceType: ModelSourceType.Available,
     APIKey: '',
