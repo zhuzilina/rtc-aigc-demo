@@ -21,7 +21,7 @@ export const AIGC_PROXY_HOST = 'http://localhost:3001/proxyAIGCFetch';
 export class Config {
   AppId = 'Your AppId';
 
-  BusinessId = 'Your BusinessId';
+  BusinessId?: string = 'Your BusinessId';
 
   RoomId = 'Your RoomId';
 

@@ -11,7 +11,7 @@ export enum ACTIONS {
 export interface RequestParams {
   [ACTIONS.StartVoiceChat]: {
     AppId: string;
-    BusinessId: string;
+    BusinessId?: string;
     RoomId: string;
     TaskId: string;
     Config: Partial<{
@@ -49,7 +49,7 @@ export interface RequestParams {
   };
   [ACTIONS.UpdateVoiceChat]: {
     AppId: string;
-    BusinessId: string;
+    BusinessId?: string;
     RoomId: string;
     TaskId: string;
     Command: string;
@@ -57,7 +57,7 @@ export interface RequestParams {
   };
   [ACTIONS.StopVoiceChat]: {
     AppId: string;
-    BusinessId: string;
+    BusinessId?: string;
     RoomId: string;
     TaskId: string;
   };
