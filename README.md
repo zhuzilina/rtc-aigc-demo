@@ -11,7 +11,7 @@
 - Node 版本: 16.0+
 - 需要准备两个 Terminal，分别启动服务端、前端页面。
 - **根据你自定义的 
-RoomId、UserId 以及申请的 AppID、BusinessID(如有)、Token、ASR AppID、TTS AppID，修改 `src/config/index.ts` 文件中的配置信息**。
+RoomId、UserId 以及申请的 AppID、BusinessID(如有)、[Token](https://www.volcengine.com/docs/6348/70121)、ASR AppID、TTS AppID，修改 `src/config/index.ts` 文件中的配置信息**。
 - 参考[指南](https://www.volcengine.com/docs/6348/1315561)，**根据你申请到的 AK、SK、SessionToken, 修改 `Server/app.js` 文件中的配置信息。**
 - 如果您已经自己完成了服务端的逻辑，可以修改前端代码文件 `src/config/index.ts` 中的 `AIGC_PROXY_HOST` 修改请求的域名，并在 `src/app/api.ts` 中修改接口的参数配置。
 - **您需要在 [火山方舟-在线推理](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?config=%7B%7D) 中创建接入点, 并将模型对应的接入点 ID 填入 `src/config/config.ts` 文件中的 `ARK_V3_MODEL_ID`**。
