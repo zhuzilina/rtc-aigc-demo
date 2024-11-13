@@ -11,12 +11,28 @@ const { Signer } = require('@volcengine/openapi');
 const app = new Koa();
 
 app.use(cors({
-    origin: '*'
+  origin: '*'
 }));
 
-const AK = 'Your AK';
-const SK = 'Your SK';
-const SessionToken = 'Your Token';
+/**
+ * @notes 在 https://console.volcengine.com/iam/keymanage/ 获取 AK/SK
+ */
+const ACCOUNT_INFO = {
+  /**
+   * @notes 必填
+   */
+  accessKeyId: 'Your AK',
+  /**
+   * @notes 必填
+   */
+  secretKey: 'Your SK',
+  /**
+   * @notes 非必填, 主账号无须传入, 子账号须传, 获取方式可参考
+   * https://www.volcengine.com/docs/6348/1315561 中的 步骤4-使用子账号调用智能体接口 一节
+   */
+  sessionToken: undefined,
+  // sessionToken: 'Your SessionToken',
+}
 
 app.use(bodyParser());
 
@@ -44,7 +60,7 @@ app.use(async ctx => {
       body,
     };
     const signer = new Signer(openApiRequestData, "rtc");
-    signer.addAuthorization({accessKeyId: AK, secretKey: SK, sessionToken: SessionToken});
+    signer.addAuthorization(ACCOUNT_INFO);
     
     /** Refer to: https://www.volcengine.com/docs/6348/69828 */
     const result = await fetch(`https://rtc.volcengineapi.com?Action=${Action}&Version=${Version}`, {
