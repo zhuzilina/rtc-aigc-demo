@@ -42,9 +42,9 @@ yarn dev
 | 问题 | 解决方案 |
 | :-- | :-- |
 | `Server/app.js` 中的 `sessionToken` 是什么，该怎么填，为什么要填 | `sessionToken` 是火山引擎子账号发起 OpenAPI 请求时所必须携带的临时 Token，获取方式可参考 [此文章末尾](https://www.volcengine.com/docs/6348/1315561)。 |
-| 不清楚什么是主账号，什么是子账号 | 可以参考[官方概念](https://www.volcengine.com/docs/6257/64963?hyperlink_open_type=lark.open_in_browser) 。|
-| 启动智能体之后, 说话为未回应 | <li>可能是因为参数传递的有问题, 例如参数大小写、类型等问题，请再次确认下这类型问题是否存在。</li><li>另一方面，可能是因为控制台中相关权限没有正常授予，请参考[流程](https://www.volcengine.com/docs/6348/1315561)再次确认下是否完成相关操作。</li><li>相关资源可能未开通或者用量不足，请再次确认。</li> |
-| 为什么我的麦克风正常、摄像头也正常，但是设备没有正常工作? | 可能是设备权限未授予，详情可参考 [Web 排查设备权限获取失败问题](https://www.volcengine.com/docs/6348/1356355) |
+| 什么是主账号，什么是子账号 | 可以参考[官方概念](https://www.volcengine.com/docs/6257/64963?hyperlink_open_type=lark.open_in_browser) 。|
+| 启动智能体之后, 说话无反馈 | <li>可能是因为参数传递的有问题, 例如参数大小写、类型等问题，请再次确认下这类型问题是否存在。</li><li>另一方面，可能是因为控制台中相关权限没有正常授予，请参考[流程](https://www.volcengine.com/docs/6348/1315561)再次确认下是否完成相关操作。</li><li>相关资源可能未开通或者用量不足，请再次确认。</li> |
+| 为什么我的麦克风正常、摄像头也正常，但是设备没有正常工作? | 可能是设备权限未授予，详情可参考 [Web 排查设备权限获取失败问题](https://www.volcengine.com/docs/6348/1356355)。 |
 
 如果有上述以外的问题，欢迎联系我们反馈。
 
