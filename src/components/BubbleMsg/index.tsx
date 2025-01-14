@@ -1,7 +1,8 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
+
 import React from 'react';
 import Bubble from '@/assets/img/bubble.svg';
 import styles from './index.module.less';
@@ -21,11 +22,7 @@ function BubbleMsg(props: IBubbleMsgProps) {
 
   return (
     <div style={style} className={`${styles.bubbleWrapper} ${className}`}>
-      <img
-        className={`${styles.bubbleLogo} ${styles[`bubble-direction-${direction}`]}`}
-        src={Bubble}
-        alt="Logo"
-      />
+      <img className={`${styles.bubbleLogo} ${styles[`bubble-direction-${direction}`]}`} src={Bubble} alt="Logo" />
       <div className={styles.bubbleText}>{text}</div>
     </div>
   );

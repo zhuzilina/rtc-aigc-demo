@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
 
@@ -7,6 +7,7 @@ const Koa = require('koa');
 const bodyParser = require('koa-bodyparser');
 const cors = require('koa2-cors');
 const { Signer } = require('@volcengine/openapi');
+const fetch = require('node-fetch');
 
 const app = new Koa();
 
@@ -28,9 +29,8 @@ const ACCOUNT_INFO = {
   secretKey: 'Your SK',
   /**
    * @notes 非必填, 主账号无须传入, 子账号须传, 获取方式可参考
-   * https://www.volcengine.com/docs/6348/1315561 中的 步骤4-使用子账号调用智能体接口 一节
+   * https://www.volcengine.com/docs/6348/1315561 中的 步骤 4-使用子账号调用智能体接口 一节
    */
-  sessionToken: undefined,
   // sessionToken: 'Your SessionToken',
 }
 
@@ -39,13 +39,15 @@ app.use(bodyParser());
 
 app.use(async ctx => {
   /**
-   * @brief Proxy AIGC Demo OpenAPI
+   * @brief 代理 AIGC 的 OpenAPI 请求
    */
   if (ctx.url.startsWith('/proxyAIGCFetch') && ctx.method.toLowerCase() === 'post') {
     const { Action, Version } = ctx.query || {};
     const body = ctx.request.body;
 
-    /** Refer to: https://github.com/volcengine/volc-sdk-nodejs */
+    /** 
+     * 参考 https://github.com/volcengine/volc-sdk-nodejs 可获取更多 火山 TOP 网关 SDK 的使用方式
+     */
     const openApiRequestData = {
       region: 'cn-north-1',
       method: 'POST',
@@ -62,7 +64,7 @@ app.use(async ctx => {
     const signer = new Signer(openApiRequestData, "rtc");
     signer.addAuthorization(ACCOUNT_INFO);
     
-    /** Refer to: https://www.volcengine.com/docs/6348/69828 */
+    /** 参考 https://www.volcengine.com/docs/6348/69828 可获取更多 OpenAPI 的信息 */
     const result = await fetch(`https://rtc.volcengineapi.com?Action=${Action}&Version=${Version}`, {
       method: 'POST',
       headers: {

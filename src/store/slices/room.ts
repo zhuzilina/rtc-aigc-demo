@@ -1,16 +1,18 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
+
 import { createSlice } from '@reduxjs/toolkit';
-import { AudioPropertiesInfo, LocalAudioStats, RemoteAudioStats } from '@volcengine/rtc';
-import config from '@/config';
+import { AudioPropertiesInfo, LocalAudioStats, NetworkQuality, RemoteAudioStats } from '@volcengine/rtc';
+import config, { SCENE } from '@/config';
 import utils from '@/utils/utils';
 
 export interface IUser {
   username?: string;
   userId?: string;
   publishAudio?: boolean;
+  publishVideo?: boolean;
   publishScreen?: boolean;
   audioStats?: RemoteAudioStats;
   audioPropertiesInfo?: AudioPropertiesInfo;
@@ -35,40 +37,52 @@ export interface RoomState {
   localUser: LocalUser;
   remoteUsers: IUser[];
   autoPlayFailUser: string[];
+  /**
+   * @brief 是否已加房
+   */
+  isJoined: boolean;
+  /**
+   * @brief 选择的模式
+   */
+  scene: SCENE;
 
   /**
-   * @brief Whether AI enabled
+   * @brief AI 通话是否启用
    */
   isAIGCEnable: boolean;
   /**
-   * @brief Whether AI saying
+   * @brief AI 是否正在说话
    */
   isAITalking: boolean;
   /**
-   * @brief Whether user saying
+   * @brief 用户是否正在说话
    */
   isUserTalking: boolean;
   /**
-   * @brief AI basic configuration
+   * @brief AI 基础配置
    */
-  aiConfig: ReturnType<typeof config.getAIGCConfig>;
+  aiConfig: ReturnType<any>;
+  /**
+   * @brief 网络质量
+   */
+  networkQuality: NetworkQuality;
 
   /**
-   * @brief conversation
+   * @brief 对话记录
    */
   msgHistory: Msg[];
 
   /**
-   * @brief Current conversation
+   * @brief 当前的对话
    */
   currentConversation: {
     [user: string]: {
       /**
-       * @brief real time conversation content
+       * @brief 实时对话内容
        */
       msg: string;
       /**
-       * @brief Whether the current real-time conversation content can be defined as a "question"
+       * @brief 当前实时对话内容是否能被定义为 "问题"
        */
       definite: boolean;
     };
@@ -77,16 +91,20 @@ export interface RoomState {
 
 const initialState: RoomState = {
   time: -1,
+  scene: SCENE.INTELLIGENT_ASSISTANT,
   remoteUsers: [],
   localUser: {
     publishAudio: true,
+    publishVideo: true,
   },
   autoPlayFailUser: [],
-  isAIGCEnable: utils.getAudioBotEnabled(),
+  isJoined: false,
+  isAIGCEnable: false,
   isAITalking: false,
   isUserTalking: false,
+  networkQuality: NetworkQuality.UNKNOWN,
 
-  aiConfig: config.getAIGCConfig(),
+  aiConfig: config.aigcConfig,
 
   msgHistory: [],
   currentConversation: {},
@@ -109,14 +127,17 @@ export const roomSlice = createSlice({
     ) => {
       state.roomId = payload.roomId;
       state.localUser = payload.user;
+      state.isJoined = true;
     },
     localLeaveRoom: (state) => {
       state.roomId = undefined;
       state.time = -1;
       state.localUser = {
         publishAudio: true,
+        publishVideo: true,
       };
       state.remoteUsers = [];
+      state.isJoined = false;
     },
     remoteUserJoin: (state, { payload }) => {
       state.remoteUsers.push(payload);
@@ -126,11 +147,19 @@ export const roomSlice = createSlice({
       state.remoteUsers.splice(findIndex, 1);
     },
 
-    updateLocalUser: (state, { payload }: { payload: LocalUser }) => {
+    updateScene: (state, { payload }) => {
+      state.scene = payload.scene;
+    },
+
+    updateLocalUser: (state, { payload }: { payload: Partial<LocalUser> }) => {
       state.localUser = {
         ...state.localUser,
         ...payload,
       };
+    },
+
+    updateNetworkQuality: (state, { payload }) => {
+      state.networkQuality = payload.networkQuality;
     },
 
     updateRemoteUser: (state, { payload }: { payload: IUser | IUser[] }) => {
@@ -196,14 +225,11 @@ export const roomSlice = createSlice({
         if (state.isUserTalking !== userTalking) {
           state.isUserTalking = userTalking;
         }
-        if (payload.user === state.localUser.userId) {
-          return;
-        }
       }
-      /** If the current speaker is a user, and the previous record is AI, and it is not a sentence, then interrupt */
+      /** 如果当前说话人是用户, 并且上一条记录是 AI 的话, 并且不成语句, 则是打断 */
       if (userTalking) {
         const lastMsg = state.msgHistory[state.msgHistory.length - 1];
-        const isAI = lastMsg.user !== state.localUser.userId;
+        const isAI = lastMsg.user === config.BotName;
         if (!lastMsg.paragraph && isAI) {
           lastMsg.isInterrupted = true;
           state.msgHistory[state.msgHistory.length - 1] = lastMsg;
@@ -254,6 +280,8 @@ export const {
   clearHistoryMsg,
   clearCurrentMsg,
   setInterruptMsg,
+  updateNetworkQuality,
+  updateScene,
 } = roomSlice.actions;
 
 export default roomSlice.reducer;

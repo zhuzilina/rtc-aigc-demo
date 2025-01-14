@@ -1,8 +1,9 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
-import { message } from 'antd';
+
+import { Message } from '@arco-design/web-react';
 import { AIGC_PROXY_HOST } from '@/config';
 
 type Headers = Record<string, string>;
@@ -32,11 +33,7 @@ export const requestGetMethod = (apiBasicParams: string, headers = {}) => {
  * @param isJson
  * @param headers
  */
-export const requestPostMethod = (
-  apiBasicParams: string,
-  isJson: boolean = true,
-  headers: Headers = {}
-) => {
+export const requestPostMethod = (apiBasicParams: string, isJson: boolean = true, headers: Headers = {}) => {
   return async <T>(params: T) => {
     const res = await fetch(`${AIGC_PROXY_HOST}${apiBasicParams}`, {
       method: 'post',
@@ -59,8 +56,6 @@ export const resultHandler = (res: any) => {
   if (Result === 'ok') {
     return Result;
   }
-  message.error(`[${ResponseMetadata?.Action}]Failed(Reason: ${ResponseMetadata?.Error?.Code})`);
-  throw new Error(
-    `[${ResponseMetadata?.Action}]Failed(${JSON.stringify(ResponseMetadata, null, 2)})`
-  );
+  Message.error(`[${ResponseMetadata?.Action}]Failed(Reason: ${ResponseMetadata?.Error?.Code})`);
+  throw new Error(`[${ResponseMetadata?.Action}]Failed(${JSON.stringify(ResponseMetadata, null, 2)})`);
 };

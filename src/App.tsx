@@ -1,13 +1,15 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
+
 import { Helmet } from 'react-helmet';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import View from './pages/View';
+import MainPage from './pages/MainPage';
+import '@arco-design/web-react/dist/css/arco.css';
 
 function App() {
+  console.warn('运行问题可参考 README 内容进行排查');
   return (
     <BrowserRouter>
       <Helmet>
@@ -15,8 +17,8 @@ function App() {
       </Helmet>
       <Routes>
         <Route path="/">
-          <Route index element={<View />} />
-          <Route path="login" element={<Login />} />
+          <Route index element={<MainPage />} />
+          <Route path="/*" element={<MainPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

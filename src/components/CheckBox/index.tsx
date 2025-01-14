@@ -1,29 +1,41 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
+
 import { ReactNode } from 'react';
+// import { Button } from '@arco-design/web-react';
 import CheckedSVG from '@/assets/img/Checked.svg';
 import styles from './index.module.less';
 
 interface IProps {
   className?: string;
-  checked: boolean;
+  checked?: boolean;
   onClick?: () => void;
   icon?: string;
   label?: string | ReactNode;
   description?: string | ReactNode;
   suffix?: string | ReactNode;
+  noStyle?: boolean;
 }
 
 function CheckBox(props: IProps) {
-  const { className = '', icon = '', checked, label, description, suffix, onClick } = props;
+  const { noStyle, className = '', icon = '', checked, label, description, suffix, onClick } = props;
+
+  if (noStyle) {
+    return (
+      <div className={`${className} ${styles.noStyle}`}>
+        {icon ? <img className={styles.icon} src={icon} alt="icon" /> : ''}
+        <div className={styles.content}>
+          <div className={styles.label}>{label}</div>
+          <div className={styles.description}>{description}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`${className} ${styles.wrapper} ${checked ? styles.active : ''}`}
-      onClick={onClick}
-    >
+    <div className={`${className} ${styles.wrapper} ${checked ? styles.active : ''}`} onClick={onClick}>
       {icon ? <img className={styles.icon} src={icon} alt="icon" /> : ''}
       <div className={styles.content}>
         <div className={styles.label}>{label}</div>

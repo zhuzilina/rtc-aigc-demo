@@ -1,37 +1,36 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
+
 import React, { useState } from 'react';
-import { Drawer, Space, Button } from 'antd';
-import { useTranslation } from 'react-i18next';
-import { CloseOutlined, RightOutlined } from '@ant-design/icons';
+import { Drawer } from '@arco-design/web-react';
+import { IconRight } from '@arco-design/web-react/icon';
 import styles from './index.module.less';
 
 type IDrawerRowItemProps = {
-  btnSrc: string;
+  btnSrc?: string;
   btnText: string;
   suffix?: React.ReactNode;
   drawer?: {
     title: string;
-    width?: number;
+    width?: string | number;
     onOpen?: () => void;
     onClose?: () => void;
     onCancel?: () => void;
-    onConfirm?: () => void;
+    onConfirm?: (handleClose: () => void) => void;
     children?: React.ReactNode;
     footer?: boolean;
   };
 } & React.HTMLAttributes<HTMLDivElement>;
 
 function DrawerRowItem(props: IDrawerRowItemProps) {
-  const { btnSrc, btnText, suffix, drawer, style = {}, className = '' } = props;
+  const { btnSrc, btnText, suffix, drawer, style, className = '' } = props;
   const [open, setOpen] = useState(false);
-  const { onClose, onOpen, footer = true } = drawer!;
+  const { onClose, onOpen } = drawer!;
 
-  const { t } = useTranslation();
-
-  const handleClose = async () => {
+  const handleClose = () => {
+    drawer?.onCancel?.();
     setOpen(false);
     onClose?.();
   };
@@ -45,55 +44,18 @@ function DrawerRowItem(props: IDrawerRowItemProps) {
 
   return (
     <>
-      <div style={style} className={`${styles.row} ${className}`} onClick={handleOpen}>
+      <div style={style || {}} className={`${styles.row} ${className}`} onClick={handleOpen}>
         <div className={styles.firstPart}>
           {btnSrc ? <img src={btnSrc} className={styles.icon} alt="svg" /> : ''}
           {btnText}
           {suffix}
         </div>
         <div className={styles.finalPart}>
-          <RightOutlined className={styles.rightOutlined} />
+          <IconRight className={styles.rightOutlined} />
         </div>
       </div>
-      <Drawer
-        closable={false}
-        title={drawer?.title || ''}
-        width={drawer?.width || 400}
-        className={styles.drawer}
-        visible={open}
-        footer={
-          footer ? (
-            <div className={styles.footer}>
-              <Button
-                className={styles.cancel}
-                onClick={() => {
-                  drawer?.onCancel?.();
-                  handleClose();
-                }}
-              >
-                {t('Cancel')}
-              </Button>
-              <Button
-                className={styles.confirm}
-                onClick={() => {
-                  drawer?.onConfirm?.();
-                  handleClose();
-                }}
-              >
-                {t('OK')}
-              </Button>
-            </div>
-          ) : (
-            ''
-          )
-        }
-        extra={
-          <Space>
-            <Button onClick={handleClose} type="text" icon={<CloseOutlined />} />
-          </Space>
-        }
-      >
-        {drawer?.children}
+      <Drawer closable title={drawer?.title || ''} width={drawer?.width || 400} className={styles.drawer} visible={open} onCancel={handleClose} footer={null}>
+        <div className={styles.children}>{drawer?.children}</div>
       </Drawer>
     </>
   );

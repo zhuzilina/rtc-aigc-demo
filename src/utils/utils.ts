@@ -1,10 +1,12 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
+
 import { v4 as uuidv4 } from 'uuid';
 import config from '@/config';
 import { Msg, RoomState } from '@/store/slices/room';
+import RtcClient from '@/lib/RtcClient';
 
 interface UserBaseInfo {
   deviceId?: string;
@@ -30,13 +32,11 @@ class Utils {
 
   getDeviceId = (): string => this.userBaseInfo.deviceId!;
 
-  getAudioBotEnabled = (): boolean => !!sessionStorage.getItem('audioBotEnabled') || false;
-
   setLoginToken = (token: string): void => {
     this.userBaseInfo.login_token = token;
   };
 
-  getLoginToken = (): string | null => config.Token;
+  getLoginToken = (): string | null => config.BaseConfig.Token;
 
   formatTime = (time: number): string => {
     if (time < 0) {
@@ -91,10 +91,7 @@ class Utils {
     let hasLogin = true;
     if (!_roomId || !_uid) {
       hasLogin = false;
-    } else if (
-      !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_roomId) ||
-      !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_uid)
-    ) {
+    } else if (!/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_roomId) || !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_uid)) {
       hasLogin = false;
     }
     return hasLogin;
@@ -138,13 +135,70 @@ class Utils {
     if (arr.length) {
       const last = arr.at(-1)!;
       const { user, value, isInterrupted } = last;
-      if (user === added.user && (added.value.startsWith(value) || value.startsWith(added.value))) {
+      if ((added.user === RtcClient.basicInfo.user_id && last.user === added.user) || (user === added.user && added.value.startsWith(value) && value.trim())) {
         arr.pop();
         added.isInterrupted = isInterrupted;
       }
     }
     arr.push(added);
   };
+
+  /**
+   * @brief 将字符串包装成 TLV
+   */
+  string2tlv(str: string) {
+    const type = 'func';
+    const typeBuffer = new Uint8Array(4);
+
+    for (let i = 0; i < type.length; i++) {
+      typeBuffer[i] = type.charCodeAt(i);
+    }
+
+    const lengthBuffer = new Uint32Array(1);
+    const valueBuffer = new TextEncoder().encode(str);
+
+    lengthBuffer[0] = valueBuffer.length;
+
+    const tlvBuffer = new Uint8Array(typeBuffer.length + 4 + valueBuffer.length);
+
+    tlvBuffer.set(typeBuffer, 0);
+
+    tlvBuffer[4] = (lengthBuffer[0] >> 24) & 0xff;
+    tlvBuffer[5] = (lengthBuffer[0] >> 16) & 0xff;
+    tlvBuffer[6] = (lengthBuffer[0] >> 8) & 0xff;
+    tlvBuffer[7] = lengthBuffer[0] & 0xff;
+
+    tlvBuffer.set(valueBuffer, 8);
+    return tlvBuffer.buffer;
+  }
+
+  /**
+   * @brief TLV 数据格式转换成字符串
+   * @note TLV 数据格式
+   * | magic number | length(big-endian) | value |
+   * @param {ArrayBufferLike} tlvBuffer
+   * @returns
+   */
+  tlv2String(tlvBuffer: ArrayBufferLike) {
+    const typeBuffer = new Uint8Array(tlvBuffer, 0, 4);
+    const lengthBuffer = new Uint8Array(tlvBuffer, 4, 4);
+    const valueBuffer = new Uint8Array(tlvBuffer, 8);
+
+    let type = '';
+    for (let i = 0; i < typeBuffer.length; i++) {
+      type += String.fromCharCode(typeBuffer[i]);
+    }
+
+    const length = (lengthBuffer[0] << 24) | (lengthBuffer[1] << 16) | (lengthBuffer[2] << 8) | lengthBuffer[3];
+
+    const value = new TextDecoder().decode(valueBuffer.subarray(0, length));
+
+    return { type, value };
+  }
+
+  isMobile() {
+    return /Mobi|Android|iPhone|iPad|Windows Phone/i.test(window.navigator.userAgent);
+  }
 }
 
 export default new Utils();

@@ -43,7 +43,7 @@
   "rules": {
     "prettier/prettier": ["warn", { "trailingComma": "es5", "printWidth": 200 }],
     "linebreak-style": ["error", "unix"],
-    "no-console": ["error", { "allow": ["warn", "error", "log"] }],
+    "no-console": ["warn", { "allow": ["warn", "error", "log"] }],
     "no-case-declarations": 0,
     "no-param-reassign": 0,
     "no-underscore-dangle": 0,

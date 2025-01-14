@@ -1,17 +1,22 @@
 /**
- * Copyright 2022 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
+ * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
-import {
+
+import VERTC, {
+  LocalAudioPropertiesInfo,
+  RemoteAudioPropertiesInfo,
   LocalStreamStats,
   MediaType,
   onUserJoinedEvent,
   onUserLeaveEvent,
   RemoteStreamStats,
   StreamRemoveReason,
+  StreamIndex,
   DeviceInfo,
   AutoPlayFailedEvent,
   PlayerEvent,
+  NetworkQuality,
 } from '@volcengine/rtc';
 import { useDispatch } from 'react-redux';
 import { useRef } from 'react';
@@ -27,14 +32,25 @@ import {
   updateAITalkState,
   setHistoryMsg,
   setCurrentMsg,
+  updateNetworkQuality,
 } from '@/store/slices/room';
 import RtcClient, { IEventListener } from './RtcClient';
 
 import { setMicrophoneList, updateSelectedDevice } from '@/store/slices/device';
+import Utils from '@/utils/utils';
+import { useMessageHandler } from '@/utils/handler';
 
 const useRtcListeners = (): IEventListener => {
   const dispatch = useDispatch();
+  const { parser } = useMessageHandler();
   const playStatus = useRef<{ [key: string]: { audio: boolean; video: boolean } }>({});
+
+  const debounceSetHistoryMsg = Utils.debounce((text: string, user: string) => {
+    const isAudioEnable = RtcClient.getAudioBotEnabled();
+    if (isAudioEnable) {
+      dispatch(setHistoryMsg({ text, user }));
+    }
+  }, 600);
 
   const handleUserJoin = (e: onUserJoinedEvent) => {
     const extraInfo = JSON.parse(e.userInfo.extraInfo || '{}');
@@ -48,23 +64,29 @@ const useRtcListeners = (): IEventListener => {
     );
   };
 
+  const handleError = (e: { errorCode: typeof VERTC.ErrorCode.DUPLICATE_LOGIN }) => {
+    const { errorCode } = e;
+    if (errorCode === VERTC.ErrorCode.DUPLICATE_LOGIN) {
+      console.log('踢人');
+    }
+  };
+
   const handleUserLeave = (e: onUserLeaveEvent) => {
     dispatch(remoteUserLeave(e.userInfo));
     dispatch(removeAutoPlayFail(e.userInfo));
   };
 
   const handleUserPublishStream = (e: { userId: string; mediaType: MediaType }) => {
-    const { userId } = e;
+    const { userId, mediaType } = e;
     const payload: IUser = { userId };
+    if (mediaType === MediaType.AUDIO) {
+      /** 暂不需要 */
+    }
     payload.publishAudio = true;
     dispatch(updateRemoteUser(payload));
   };
 
-  const handleUserUnpublishStream = (e: {
-    userId: string;
-    mediaType: MediaType;
-    reason: StreamRemoveReason;
-  }) => {
+  const handleUserUnpublishStream = (e: { userId: string; mediaType: MediaType; reason: StreamRemoveReason }) => {
     const { userId, mediaType } = e;
 
     const payload: IUser = { userId };
@@ -96,6 +118,30 @@ const useRtcListeners = (): IEventListener => {
     );
   };
 
+  const handleLocalAudioPropertiesReport = (e: LocalAudioPropertiesInfo[]) => {
+    const localAudioInfo = e.find((audioInfo) => audioInfo.streamIndex === StreamIndex.STREAM_INDEX_MAIN);
+    if (localAudioInfo) {
+      dispatch(
+        updateLocalUser({
+          audioPropertiesInfo: localAudioInfo.audioPropertiesInfo,
+        })
+      );
+    }
+  };
+
+  const handleRemoteAudioPropertiesReport = (e: RemoteAudioPropertiesInfo[]) => {
+    const remoteAudioInfo = e
+      .filter((audioInfo) => audioInfo.streamKey.streamIndex === StreamIndex.STREAM_INDEX_MAIN)
+      .map((audioInfo) => ({
+        userId: audioInfo.streamKey.userId,
+        audioPropertiesInfo: audioInfo.audioPropertiesInfo,
+      }));
+
+    if (remoteAudioInfo.length) {
+      dispatch(updateRemoteUser(remoteAudioInfo));
+    }
+  };
+
   const handleAudioDeviceStateChanged = async (device: DeviceInfo) => {
     const devices = await RtcClient.getDevices();
 
@@ -104,7 +150,7 @@ const useRtcListeners = (): IEventListener => {
       if (device.deviceState === 'inactive') {
         deviceId = devices.audioInputs?.[0].deviceId || '';
       }
-      RtcClient.switchDevice('microphone', deviceId);
+      RtcClient.switchDevice(MediaType.AUDIO, deviceId);
       dispatch(setMicrophoneList(devices.audioInputs));
 
       dispatch(
@@ -112,6 +158,22 @@ const useRtcListeners = (): IEventListener => {
           selectedMicrophone: deviceId,
         })
       );
+    }
+  };
+
+  const handleUserMessageReceived = (e: { userId: string; message: any }) => {
+    /** debounce 记录用户输入文字 */
+    if (e.message) {
+      const msgObj = JSON.parse(e.message || '{}');
+      if (msgObj.text) {
+        const { text: msg, definite, user_id: user } = msgObj;
+        if ((window as any)._debug_mode) {
+          dispatch(setHistoryMsg({ msg, user }));
+        } else {
+          debounceSetHistoryMsg(msg, user);
+        }
+        dispatch(setCurrentMsg({ msg, definite, user }));
+      }
     }
   };
 
@@ -174,40 +236,37 @@ const useRtcListeners = (): IEventListener => {
     dispatch(updateAITalkState({ isAITalking: false }));
   };
 
+  const handleNetworkQuality = (uplinkNetworkQuality: NetworkQuality, downlinkNetworkQuality: NetworkQuality) => {
+    dispatch(
+      updateNetworkQuality({
+        networkQuality: Math.floor((uplinkNetworkQuality + downlinkNetworkQuality) / 2) as NetworkQuality,
+      })
+    );
+  };
+
   const handleRoomBinaryMessageReceived = (event: { userId: string; message: ArrayBuffer }) => {
     const { message } = event;
-    const decoder = new TextDecoder('utf-8');
-    const str = decoder.decode(message);
-    const start = str.indexOf('{');
-    const context = JSON.parse(str.substring(start, str.length)) || {};
-    const data = context.data?.[0] || {};
-    if (data) {
-      const { text: msg, definite, userId: user, paragraph } = data;
-      if ((window as any)._debug_mode) {
-        dispatch(setHistoryMsg({ msg, user, paragraph, definite }));
-      } else {
-        const isAudioEnable = RtcClient.getAudioBotEnabled();
-        if (isAudioEnable) {
-          dispatch(setHistoryMsg({ text: msg, user, paragraph, definite }));
-        }
-      }
-      dispatch(setCurrentMsg({ msg, definite, user, paragraph }));
-    }
+    parser(message);
   };
 
   return {
+    handleError,
     handleUserJoin,
     handleUserLeave,
     handleUserPublishStream,
     handleUserUnpublishStream,
     handleRemoteStreamStats,
     handleLocalStreamStats,
+    handleLocalAudioPropertiesReport,
+    handleRemoteAudioPropertiesReport,
     handleAudioDeviceStateChanged,
+    handleUserMessageReceived,
     handleAutoPlayFail,
     handlePlayerEvent,
     handleUserStartAudioCapture,
     handleUserStopAudioCapture,
     handleRoomBinaryMessageReceived,
+    handleNetworkQuality,
   };
 };
 
