@@ -20,7 +20,16 @@ interface IProps {
 }
 
 function CheckBox(props: IProps) {
-  const { noStyle, className = '', icon = '', checked, label, description, suffix, onClick } = props;
+  const {
+    noStyle,
+    className = '',
+    icon = '',
+    checked,
+    label,
+    description,
+    suffix,
+    onClick,
+  } = props;
 
   if (noStyle) {
     return (
@@ -35,7 +44,10 @@ function CheckBox(props: IProps) {
   }
 
   return (
-    <div className={`${className} ${styles.wrapper} ${checked ? styles.active : ''}`} onClick={onClick}>
+    <div
+      className={`${className} ${styles.wrapper} ${checked ? styles.active : ''}`}
+      onClick={onClick}
+    >
       {icon ? <img className={styles.icon} src={icon} alt="icon" /> : ''}
       <div className={styles.content}>
         <div className={styles.label}>{label}</div>

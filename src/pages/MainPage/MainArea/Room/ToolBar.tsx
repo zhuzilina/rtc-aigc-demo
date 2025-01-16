@@ -32,9 +32,25 @@ function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
   };
   return (
     <div className={`${className} ${style.btns} ${utils.isMobile() ? style.column : ''}`} {...rest}>
-      {utils.isMobile() ? <img src={SettingSVG} onClick={handleSetting} className={style.setting} alt="setting" /> : null}
-      <img src={isAudioPublished ? MicOpenSVG : MicCloseSVG} onClick={() => switchMic(true)} className={style.btn} alt="mic" />
-      {model === AI_MODEL.VISION ? <img src={isVideoPublished ? CameraOpenSVG : CameraCloseSVG} onClick={() => switchCamera(true)} className={style.btn} alt="camera" /> : ''}
+      {utils.isMobile() ? (
+        <img src={SettingSVG} onClick={handleSetting} className={style.setting} alt="setting" />
+      ) : null}
+      <img
+        src={isAudioPublished ? MicOpenSVG : MicCloseSVG}
+        onClick={() => switchMic(true)}
+        className={style.btn}
+        alt="mic"
+      />
+      {model === AI_MODEL.VISION ? (
+        <img
+          src={isVideoPublished ? CameraOpenSVG : CameraCloseSVG}
+          onClick={() => switchCamera(true)}
+          className={style.btn}
+          alt="camera"
+        />
+      ) : (
+        ''
+      )}
       <img src={LeaveRoomSVG} onClick={leaveRoom} className={style.btn} alt="leave" />
       {utils.isMobile() ? (
         <Drawer

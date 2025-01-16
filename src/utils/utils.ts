@@ -91,7 +91,10 @@ class Utils {
     let hasLogin = true;
     if (!_roomId || !_uid) {
       hasLogin = false;
-    } else if (!/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_roomId) || !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_uid)) {
+    } else if (
+      !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_roomId) ||
+      !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_uid)
+    ) {
       hasLogin = false;
     }
     return hasLogin;
@@ -135,7 +138,10 @@ class Utils {
     if (arr.length) {
       const last = arr.at(-1)!;
       const { user, value, isInterrupted } = last;
-      if ((added.user === RtcClient.basicInfo.user_id && last.user === added.user) || (user === added.user && added.value.startsWith(value) && value.trim())) {
+      if (
+        (added.user === RtcClient.basicInfo.user_id && last.user === added.user) ||
+        (user === added.user && added.value.startsWith(value) && value.trim())
+      ) {
         arr.pop();
         added.isInterrupted = isInterrupted;
       }
@@ -177,7 +183,7 @@ class Utils {
    * @note TLV 数据格式
    * | magic number | length(big-endian) | value |
    * @param {ArrayBufferLike} tlvBuffer
-   * @returns
+   * @returns 
    */
   tlv2String(tlvBuffer: ArrayBufferLike) {
     const typeBuffer = new Uint8Array(tlvBuffer, 0, 4);
@@ -189,7 +195,8 @@ class Utils {
       type += String.fromCharCode(typeBuffer[i]);
     }
 
-    const length = (lengthBuffer[0] << 24) | (lengthBuffer[1] << 16) | (lengthBuffer[2] << 8) | lengthBuffer[3];
+    const length =
+      (lengthBuffer[0] << 24) | (lengthBuffer[1] << 16) | (lengthBuffer[2] << 8) | lengthBuffer[3];
 
     const value = new TextDecoder().decode(valueBuffer.subarray(0, length));
 

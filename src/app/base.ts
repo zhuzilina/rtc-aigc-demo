@@ -33,7 +33,11 @@ export const requestGetMethod = (apiBasicParams: string, headers = {}) => {
  * @param isJson
  * @param headers
  */
-export const requestPostMethod = (apiBasicParams: string, isJson: boolean = true, headers: Headers = {}) => {
+export const requestPostMethod = (
+  apiBasicParams: string,
+  isJson: boolean = true,
+  headers: Headers = {}
+) => {
   return async <T>(params: T) => {
     const res = await fetch(`${AIGC_PROXY_HOST}${apiBasicParams}`, {
       method: 'post',
@@ -57,5 +61,7 @@ export const resultHandler = (res: any) => {
     return Result;
   }
   Message.error(`[${ResponseMetadata?.Action}]Failed(Reason: ${ResponseMetadata?.Error?.Code})`);
-  throw new Error(`[${ResponseMetadata?.Action}]Failed(${JSON.stringify(ResponseMetadata, null, 2)})`);
+  throw new Error(
+    `[${ResponseMetadata?.Action}]Failed(${JSON.stringify(ResponseMetadata, null, 2)})`
+  );
 };

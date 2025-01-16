@@ -29,13 +29,20 @@ function AvatarCard(props: IAvatarCardProps) {
     <div className={`${style.card} ${className}`} {...rest}>
       <div className={style.corner} />
       <div className={style.avatar}>
-        <img id="avatar-card" src={avatar || DouBaoAvatar} className={style['doubao-gif']} alt="Avatar" />
+        <img
+          id="avatar-card"
+          src={avatar || DouBaoAvatar}
+          className={style['doubao-gif']}
+          alt="Avatar"
+        />
       </div>
       <div className={style.body} />
       <div className={style['text-wrapper']}>
         <div className={style['user-info']}>
           <div className={style.title}>{Name[scene]}</div>
-          <div className={style.description}>声源来自 {ReversedVoiceType[TTSConfig?.VoiceType || '']}</div>
+          <div className={style.description}>
+            声源来自 {ReversedVoiceType[TTSConfig?.VoiceType || '']}
+          </div>
           <div className={style.description}>模型 {LLMConfig.ModelName}</div>
           <AISettings />
         </div>

@@ -26,7 +26,9 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
   const handleOperateCamera = () => {
     !localUser.publishVideo ? RtcClient.startVideoCapture() : RtcClient.stopVideoCapture();
 
-    !localUser.publishVideo ? RtcClient.publishStream(MediaType.VIDEO) : RtcClient.unpublishStream(MediaType.VIDEO);
+    !localUser.publishVideo
+      ? RtcClient.publishStream(MediaType.VIDEO)
+      : RtcClient.unpublishStream(MediaType.VIDEO);
 
     dispatch(
       updateLocalUser({
@@ -49,7 +51,11 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
         <div id={LocalVideoID} className={styles['camera-player']} />
       ) : (
         <div className={styles['camera-placeholder']}>
-          <img src={CameraCloseNoteSVG} alt="close" className={styles['camera-placeholder-close-note']} />
+          <img
+            src={CameraCloseNoteSVG}
+            alt="close"
+            className={styles['camera-placeholder-close-note']}
+          />
           <div>
             请
             <span onClick={handleOperateCamera} className={styles['camera-open-btn']}>

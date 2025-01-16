@@ -8,12 +8,23 @@ import { useSelector, useDispatch } from 'react-redux';
 import { MediaType } from '@volcengine/rtc';
 import Utils from '@/utils/utils';
 import RtcClient from '@/lib/RtcClient';
-import { clearCurrentMsg, clearHistoryMsg, localJoinRoom, localLeaveRoom, updateAIGCState, updateLocalUser } from '@/store/slices/room';
+import {
+  clearCurrentMsg,
+  clearHistoryMsg,
+  localJoinRoom,
+  localLeaveRoom,
+  updateAIGCState,
+  updateLocalUser,
+} from '@/store/slices/room';
 
 import useRtcListeners from '@/lib/listenerHooks';
 import { RootState } from '@/store';
 
-import { updateMediaInputs, updateSelectedDevice, setDevicePermissions } from '@/store/slices/device';
+import {
+  updateMediaInputs,
+  updateSelectedDevice,
+  setDevicePermissions,
+} from '@/store/slices/device';
 import logger from '@/utils/logger';
 import aigcConfig, { AI_MODEL } from '@/config';
 
@@ -45,7 +56,10 @@ export const useGetDevicePermission = () => {
   return permission;
 };
 
-export const useJoin = (): [boolean, (formValues: FormProps, fromRefresh: boolean) => Promise<void | boolean>] => {
+export const useJoin = (): [
+  boolean,
+  (formValues: FormProps, fromRefresh: boolean) => Promise<void | boolean>
+] => {
   const devicePermissions = useSelector((state: RootState) => state.device.devicePermissions);
   const room = useSelector((state: RootState) => state.room);
 
@@ -198,7 +212,9 @@ export const useDeviceState = () => {
 
   const switchMic = (publish = true) => {
     if (publish) {
-      !isAudioPublished ? RtcClient.publishStream(MediaType.AUDIO) : RtcClient.unpublishStream(MediaType.AUDIO);
+      !isAudioPublished
+        ? RtcClient.publishStream(MediaType.AUDIO)
+        : RtcClient.unpublishStream(MediaType.AUDIO);
     }
     queryDevices(MediaType.AUDIO);
     !isAudioPublished ? RtcClient.startAudioCapture() : RtcClient.stopAudioCapture();
@@ -211,7 +227,9 @@ export const useDeviceState = () => {
 
   const switchCamera = (publish = true) => {
     if (publish) {
-      !isVideoPublished ? RtcClient.publishStream(MediaType.VIDEO) : RtcClient.unpublishStream(MediaType.VIDEO);
+      !isVideoPublished
+        ? RtcClient.publishStream(MediaType.VIDEO)
+        : RtcClient.unpublishStream(MediaType.VIDEO);
     }
     queryDevices(MediaType.VIDEO);
     !localUser.publishVideo ? RtcClient.startVideoCapture() : RtcClient.stopVideoCapture();

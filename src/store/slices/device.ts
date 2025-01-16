@@ -68,6 +68,7 @@ export const DeviceSlice = createSlice({
     },
   },
 });
-export const { updateMediaInputs, updateSelectedDevice, setMicrophoneList, setDevicePermissions } = DeviceSlice.actions;
+export const { updateMediaInputs, updateSelectedDevice, setMicrophoneList, setDevicePermissions } =
+  DeviceSlice.actions;
 
 export default DeviceSlice.reducer;

@@ -34,7 +34,8 @@ function NetworkIndicator() {
   const networkQuality = room.networkQuality;
   const delay = room.localUser.audioStats?.rtt;
   const audioLossRateUpper = room.localUser.audioStats?.audioLossRate || 0;
-  const audioLossRateLower = room.remoteUsers.find((user) => user.userId === Config.BotName)?.audioStats?.audioLossRate || 0;
+  const audioLossRateLower =
+    room.remoteUsers.find((user) => user.userId === Config.BotName)?.audioStats?.audioLossRate || 0;
 
   const indicators = useMemo(() => {
     switch (networkQuality) {
@@ -75,11 +76,15 @@ function NetworkIndicator() {
             <div className={style.loss}>
               <div>
                 <IconArrowUp style={{ color: 'rgba(22, 100, 255, 1)' }} />
-                <span>{`${audioLossRateUpper}` ? (audioLossRateUpper * 100)?.toFixed(0) : '- '}%</span>
+                <span>
+                  {`${audioLossRateUpper}` ? (audioLossRateUpper * 100)?.toFixed(0) : '- '}%
+                </span>
               </div>
               <div>
                 <IconArrowDown />
-                <span>{`${audioLossRateLower}` ? (audioLossRateLower * 100)?.toFixed(0) : '- '}%</span>
+                <span>
+                  {`${audioLossRateLower}` ? (audioLossRateLower * 100)?.toFixed(0) : '- '}%
+                </span>
               </div>
             </div>
           </div>

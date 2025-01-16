@@ -54,7 +54,15 @@ function DrawerRowItem(props: IDrawerRowItemProps) {
           <IconRight className={styles.rightOutlined} />
         </div>
       </div>
-      <Drawer closable title={drawer?.title || ''} width={drawer?.width || 400} className={styles.drawer} visible={open} onCancel={handleClose} footer={null}>
+      <Drawer
+        closable
+        title={drawer?.title || ''}
+        width={drawer?.width || 400}
+        className={styles.drawer}
+        visible={open}
+        onCancel={handleClose}
+        footer={null}
+      >
         <div className={styles.children}>{drawer?.children}</div>
       </Drawer>
     </>

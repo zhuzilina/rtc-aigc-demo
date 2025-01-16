@@ -28,13 +28,18 @@ type ApiConfig = typeof APIS_CONFIG;
 type TupleToUnion<T extends readonly unknown[]> = T[number];
 type ApiNames = Pick<TupleToUnion<ApiConfig>, 'action'>['action'];
 type RequestFn = <T extends keyof RequestResponse>(params?: RequestParams[T]) => RequestResponse[T];
-type PromiseRequestFn = <T extends keyof RequestResponse>(params?: RequestParams[T]) => Promise<RequestResponse[T]>;
+type PromiseRequestFn = <T extends keyof RequestResponse>(
+  params?: RequestParams[T]
+) => Promise<RequestResponse[T]>;
 type Apis = Record<ApiNames, RequestFn | PromiseRequestFn>;
 
 const APIS = APIS_CONFIG.reduce((store, cur) => {
   const { action, apiBasicParams, method = 'get' } = cur;
   store[action] = async (params) => {
-    const queryData = method === 'get' ? await requestGetMethod(apiBasicParams)(params) : await requestPostMethod(apiBasicParams)(params);
+    const queryData =
+      method === 'get'
+        ? await requestGetMethod(apiBasicParams)(params)
+        : await requestPostMethod(apiBasicParams)(params);
     const res = await queryData?.json();
     return resultHandler(res);
   };

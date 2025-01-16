@@ -19,7 +19,11 @@ function InvokeButton(props: IInvokeButtonProps) {
     <div className={`${style.wrapper} ${loading ? '' : style.cursor} ${className}`} {...rest}>
       <div className={style.btn}>
         <img src={CallButtonSVG} alt="call" />
-        {loading ? <Loading className={style.icon} /> : <img src={PhoneSVG} className={style.icon} alt="phone" />}
+        {loading ? (
+          <Loading className={style.icon} />
+        ) : (
+          <img src={PhoneSVG} className={style.icon} alt="phone" />
+        )}
       </div>
       <div className={style.text}>{loading ? '连接中' : '通话'}</div>
     </div>

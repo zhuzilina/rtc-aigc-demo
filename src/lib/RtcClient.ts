@@ -3,6 +3,7 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
+
 import VERTC, {
   MirrorType,
   StreamIndex,
@@ -33,7 +34,11 @@ export interface IEventListener {
   handleUserJoin: (e: onUserJoinedEvent) => void;
   handleUserLeave: (e: onUserLeaveEvent) => void;
   handleUserPublishStream: (e: { userId: string; mediaType: MediaType }) => void;
-  handleUserUnpublishStream: (e: { userId: string; mediaType: MediaType; reason: StreamRemoveReason }) => void;
+  handleUserUnpublishStream: (e: {
+    userId: string;
+    mediaType: MediaType;
+    reason: StreamRemoveReason;
+  }) => void;
   handleRemoteStreamStats: (e: RemoteStreamStats) => void;
   handleLocalStreamStats: (e: LocalStreamStats) => void;
   handleLocalAudioPropertiesReport: (e: LocalAudioPropertiesInfo[]) => void;
@@ -45,7 +50,10 @@ export interface IEventListener {
   handleUserStartAudioCapture: (e: { userId: string }) => void;
   handleUserStopAudioCapture: (e: { userId: string }) => void;
   handleRoomBinaryMessageReceived: (e: { userId: string; message: ArrayBuffer }) => void;
-  handleNetworkQuality: (uplinkNetworkQuality: NetworkQuality, downlinkNetworkQuality: NetworkQuality) => void;
+  handleNetworkQuality: (
+    uplinkNetworkQuality: NetworkQuality,
+    downlinkNetworkQuality: NetworkQuality
+  ) => void;
 }
 
 interface EngineOptions {

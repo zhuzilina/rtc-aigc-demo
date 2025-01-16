@@ -8,7 +8,19 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { IconSwap } from '@arco-design/web-react/icon';
 import CheckIcon from '../CheckIcon';
-import Config, { Icon, Name, SCENE, Prompt, Welcome, Voice, Model, AI_MODEL, ModelSourceType, VOICE_INFO_MAP, VOICE_TYPE } from '@/config';
+import Config, {
+  Icon,
+  Name,
+  SCENE,
+  Prompt,
+  Welcome,
+  Voice,
+  Model,
+  AI_MODEL,
+  ModelSourceType,
+  VOICE_INFO_MAP,
+  VOICE_TYPE,
+} from '@/config';
 import TitleCard from '../TitleCard';
 import CheckBoxSelector from '@/components/CheckBoxSelector';
 import RtcClient from '@/lib/RtcClient';
@@ -156,7 +168,9 @@ function AISettings() {
           选择你所需要的
           <span className={styles['special-text']}> AI 人设</span>
         </div>
-        <div className={styles['sub-title']}>我们已为您配置好对应人设的基本参数，您也可以根据自己的需求进行自定义设置</div>
+        <div className={styles['sub-title']}>
+          我们已为您配置好对应人设的基本参数，您也可以根据自己的需求进行自定义设置
+        </div>
         <div className={utils.isMobile() ? styles['scenes-mobile'] : styles.scenes}>
           {SCENES.map((key) => (
             <CheckIcon
@@ -282,11 +296,12 @@ function AISettings() {
                 <TitleCard title="官方模型">
                   <CheckBoxSelector
                     label="模型选择"
-                    data={Object.keys(AI_MODEL).map((type) => ({
-                      key: AI_MODEL[type as keyof typeof AI_MODEL],
-                      label: type.replaceAll('_', ' '),
-                      icon: DoubaoModelSVG,
-                    }))}
+                    data={Object.keys(AI_MODEL)
+                      .map((type) => ({
+                        key: AI_MODEL[type as keyof typeof AI_MODEL],
+                        label: type.replaceAll('_', ' '),
+                        icon: DoubaoModelSVG,
+                      }))}
                     moreIcon={ModelChangeSVG}
                     moreText="更换模型"
                     placeHolder="请选择你需要的模型"

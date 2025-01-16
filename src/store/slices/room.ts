@@ -4,7 +4,12 @@
  */
 
 import { createSlice } from '@reduxjs/toolkit';
-import { AudioPropertiesInfo, LocalAudioStats, NetworkQuality, RemoteAudioStats } from '@volcengine/rtc';
+import {
+  AudioPropertiesInfo,
+  LocalAudioStats,
+  NetworkQuality,
+  RemoteAudioStats,
+} from '@volcengine/rtc';
 import config, { SCENE } from '@/config';
 import utils from '@/utils/utils';
 

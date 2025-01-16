@@ -31,11 +31,15 @@ function DeviceDrawerButton(props: IDeviceDrawerButtonProps) {
   const switcher = type === MediaType.AUDIO ? device.switchMic : device.switchCamera;
   const devicePermissions = useSelector((state: RootState) => state.device.devicePermissions);
   const devices = useSelector((state: RootState) => state.device);
-  const selectedDevice = type === MediaType.AUDIO ? devices.selectedMicrophone : devices.selectedCamera;
+  const selectedDevice =
+    type === MediaType.AUDIO ? devices.selectedMicrophone : devices.selectedCamera;
   const permission = devicePermissions?.[type === MediaType.AUDIO ? 'audio' : 'video'];
 
   const dispatch = useDispatch();
-  const deviceList = useMemo(() => (type === MediaType.AUDIO ? devices.audioInputs : devices.videoInputs), [devices]);
+  const deviceList = useMemo(
+    () => (type === MediaType.AUDIO ? devices.audioInputs : devices.videoInputs),
+    [devices]
+  );
 
   const handleDeviceChange = (value: string) => {
     RtcClient.switchDevice(type, value);
@@ -66,7 +70,12 @@ function DeviceDrawerButton(props: IDeviceDrawerButtonProps) {
           <div className={styles.wrapper}>
             <div className={styles.label}>{DEVICE_NAME[type]}</div>
             <div className={styles.value}>
-              <Switch checked={isEnable} size="small" onChange={(enable) => switcher(enable)} disabled={!permission} />
+              <Switch
+                checked={isEnable}
+                size="small"
+                onChange={(enable) => switcher(enable)}
+                disabled={!permission}
+              />
               <Select style={{ width: 250 }} value={selectedDevice} onChange={handleDeviceChange}>
                 {deviceList.map((device) => (
                   <Select.Option key={device.deviceId} value={device.deviceId}>

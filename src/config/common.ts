@@ -26,7 +26,9 @@ export enum CustomParamsType {
 /**
  * @brief AI 音色可选值
  * @default 通用女声
- * @notes 通用女声、通用男声为默认音色, 其它皆为付费音色
+ * @notes 通用女声、通用男声为默认音色, 其它皆为付费音色。
+ *        音色 ID 可于 https://console.volcengine.com/speech/service/8 中开通获取。
+ *        对应 "音色详情" 中, "Voice_type" 列的值。
  */
 export enum VOICE_TYPE {
   '通用女声' = 'BV001_streaming',
@@ -102,18 +104,14 @@ export const AI_MODE_MAP: Partial<Record<AI_MODEL, AI_MODEL_MODE>> = {
 
 /**
  * @brief 豆包模型的 ID
+ * @note 具体的模型 ID 请至 https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint 参看/创建
+ *       模型 ID 即接入点 ID, 在上述链接中表格内 "接入点名称" 列中, 类似于 "ep-2024xxxxxx-xxx" 格式即是模型 ID。
  */
 export const ARK_V3_MODEL_ID: Partial<Record<AI_MODEL, string>> = {
-  /**
-   * @note 具体的 ID 请至 https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint 参看/创建
-   */
   [AI_MODEL.DOUBAO_LITE_4K]: '**************   此处填充方舟上的模型 ID *************',
   [AI_MODEL.DOUBAO_PRO_4K]: '**************   此处填充方舟上的模型 ID *************',
   [AI_MODEL.DOUBAO_PRO_32K]: '**************   此处填充方舟上的模型 ID *************',
   [AI_MODEL.DOUBAO_PRO_128K]: '**************   此处填充方舟上的模型 ID *************',
-  /**
-   * @note 视觉模型, 可至火山方舟开通使用
-   */
   [AI_MODEL.VISION]: '**************   此处填充方舟上的模型 ID *************',
   // ... 可根据所开通的模型进行扩充
 };
@@ -155,6 +153,9 @@ export const Name = {
   [SCENE.CUSTOM]: '自定义',
 };
 
+/**
+ * @brief 智能体启动后的欢迎词。
+ */
 export const Welcome = {
   [SCENE.INTELLIGENT_ASSISTANT]: '你好，我是你的AI小助手，有什么可以帮你的吗？',
   [SCENE.VIRTUAL_GIRL_FRIEND]: '你来啦，我好想你呀～今天有没有想我呢？',
@@ -186,15 +187,38 @@ export const Voice = {
 };
 
 export const Questions = {
-  [SCENE.INTELLIGENT_ASSISTANT]: ['最近有什么好看的电影推荐吗？', '上海有什么好玩的地方吗？', '能给我讲一个故事吗？'],
-  [SCENE.VIRTUAL_GIRL_FRIEND]: ['我今天有点累。', '我们等会儿去看电影吧！', '明天我生日，你准备送给我什么礼物呢？'],
-  [SCENE.TRANSLATE]: ['道可道，非常道；名可名，非常名。', 'Stay hungry, stay foolish.', '天生我材必有用，千金散尽还复来。'],
-  [SCENE.CHILDREN_ENCYCLOPEDIA]: ['天上有多少颗星星？', '太阳为什么总是从东边升起？', '苹果的英语怎么说？'],
-  [SCENE.CUSTOMER_SERVICE]: ['我上次来你们店里吃饭，等了三十分钟菜才上来。', '你们店里卫生间有点脏。', '你们空调开得太冷了。'],
+  [SCENE.INTELLIGENT_ASSISTANT]: [
+    '最近有什么好看的电影推荐吗？',
+    '上海有什么好玩的地方吗？',
+    '能给我讲一个故事吗？',
+  ],
+  [SCENE.VIRTUAL_GIRL_FRIEND]: [
+    '我今天有点累。',
+    '我们等会儿去看电影吧！',
+    '明天我生日，你准备送给我什么礼物呢？',
+  ],
+  [SCENE.TRANSLATE]: [
+    '道可道，非常道；名可名，非常名。',
+    'Stay hungry, stay foolish.',
+    '天生我材必有用，千金散尽还复来。',
+  ],
+  [SCENE.CHILDREN_ENCYCLOPEDIA]: [
+    '天上有多少颗星星？',
+    '太阳为什么总是从东边升起？',
+    '苹果的英语怎么说？',
+  ],
+  [SCENE.CUSTOMER_SERVICE]: [
+    '我上次来你们店里吃饭，等了三十分钟菜才上来。',
+    '你们店里卫生间有点脏。',
+    '你们空调开得太冷了。',
+  ],
   [SCENE.TEACHING_ASSISTANT]: ['这个单词是什么意思？', '这道题该怎么做？', '我的表情是什么样的？'],
   [SCENE.CUSTOM]: ['你能帮我解决什么问题?', '今天北京天气怎么样?', '你喜欢哪位流行歌手?'],
 };
 
+/**
+ * @brief 大模型 System 角色预设指令，可用于控制模型输出, 类似 Prompt 的概念。
+ */
 export const Prompt = {
   [SCENE.INTELLIGENT_ASSISTANT]: `##人设
 你是一个全能智能体，拥有丰富的百科知识，可以为人们答疑解惑，解决问题。

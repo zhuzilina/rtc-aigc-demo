@@ -86,7 +86,11 @@ const useRtcListeners = (): IEventListener => {
     dispatch(updateRemoteUser(payload));
   };
 
-  const handleUserUnpublishStream = (e: { userId: string; mediaType: MediaType; reason: StreamRemoveReason }) => {
+  const handleUserUnpublishStream = (e: {
+    userId: string;
+    mediaType: MediaType;
+    reason: StreamRemoveReason;
+  }) => {
     const { userId, mediaType } = e;
 
     const payload: IUser = { userId };
@@ -119,7 +123,9 @@ const useRtcListeners = (): IEventListener => {
   };
 
   const handleLocalAudioPropertiesReport = (e: LocalAudioPropertiesInfo[]) => {
-    const localAudioInfo = e.find((audioInfo) => audioInfo.streamIndex === StreamIndex.STREAM_INDEX_MAIN);
+    const localAudioInfo = e.find(
+      (audioInfo) => audioInfo.streamIndex === StreamIndex.STREAM_INDEX_MAIN
+    );
     if (localAudioInfo) {
       dispatch(
         updateLocalUser({
@@ -236,10 +242,15 @@ const useRtcListeners = (): IEventListener => {
     dispatch(updateAITalkState({ isAITalking: false }));
   };
 
-  const handleNetworkQuality = (uplinkNetworkQuality: NetworkQuality, downlinkNetworkQuality: NetworkQuality) => {
+  const handleNetworkQuality = (
+    uplinkNetworkQuality: NetworkQuality,
+    downlinkNetworkQuality: NetworkQuality
+  ) => {
     dispatch(
       updateNetworkQuality({
-        networkQuality: Math.floor((uplinkNetworkQuality + downlinkNetworkQuality) / 2) as NetworkQuality,
+        networkQuality: Math.floor(
+          (uplinkNetworkQuality + downlinkNetworkQuality) / 2
+        ) as NetworkQuality,
       })
     );
   };

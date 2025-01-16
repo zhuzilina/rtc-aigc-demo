@@ -46,11 +46,18 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
           return '';
         }
         return (
-          <div className={`${styles.sentence} ${isUserMsg ? styles.user : styles.robot}`} key={`msg-${index}`}>
+          <div
+            className={`${styles.sentence} ${isUserMsg ? styles.user : styles.robot}`}
+            key={`msg-${index}`}
+          >
             <div className={styles.content}>
               {value}
               <div className={styles['loading-wrapper']}>
-                {isAIReady && (isUserTalking || isAITalking) && index === msgHistory.length - 1 ? <Loading gap={3} className={styles.loading} dotClassName={styles.dot} /> : ''}
+                {isAIReady && (isUserTalking || isAITalking) && index === msgHistory.length - 1 ? (
+                  <Loading gap={3} className={styles.loading} dotClassName={styles.dot} />
+                ) : (
+                  ''
+                )}
               </div>
             </div>
             {!isUserMsg && isInterrupted ? <Tag className={styles.interruptTag}>已打断</Tag> : ''}

@@ -74,12 +74,22 @@ function Header(props: HeaderProps) {
       {children}
       {utils.isMobile() ? null : (
         <div className={styles['header-right']}>
-          <div className={styles['header-right-text']} onClick={() => window.open('https://www.volcengine.com/product/veRTC/ConversationalAI', '_blank')}>
+          <div
+            className={styles['header-right-text']}
+            onClick={() =>
+              window.open('https://www.volcengine.com/product/veRTC/ConversationalAI', '_blank')
+            }
+          >
             官网链接
           </div>
           <div
             className={styles['header-right-text']}
-            onClick={() => window.open('https://www.volcengine.com/contact/product?t=%E5%AF%B9%E8%AF%9D%E5%BC%8Fai&source=%E4%BA%A7%E5%93%81%E5%92%A8%E8%AF%A2', '_blank')}
+            onClick={() =>
+              window.open(
+                'https://www.volcengine.com/contact/product?t=%E5%AF%B9%E8%AF%9D%E5%BC%8Fai&source=%E4%BA%A7%E5%93%81%E5%92%A8%E8%AF%A2',
+                '_blank'
+              )
+            }
           >
             联系我们
           </div>

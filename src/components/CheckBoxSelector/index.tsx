@@ -42,7 +42,13 @@ function CheckBoxSelector(props: IProps) {
     <>
       <div className={styles.wrapper}>
         {selectedOne ? (
-          <CheckBox className={styles.box} icon={selectedOne?.icon} label={selectedOne?.label || ''} description={selectedOne?.description} noStyle />
+          <CheckBox
+            className={styles.box}
+            icon={selectedOne?.icon}
+            label={selectedOne?.label || ''}
+            description={selectedOne?.description}
+            noStyle
+          />
         ) : (
           <div className={styles.placeholder}>{placeHolder}</div>
         )}
@@ -78,7 +84,15 @@ function CheckBoxSelector(props: IProps) {
       >
         <div className={styles.modalInner}>
           {data.map((item) => (
-            <CheckBox className={styles.box} key={item.key} icon={item.icon} label={item.label} description={item.description} checked={item.key === selected} onClick={() => setSelected(item.key)} />
+            <CheckBox
+              className={styles.box}
+              key={item.key}
+              icon={item.icon}
+              label={item.label}
+              description={item.description}
+              checked={item.key === selected}
+              onClick={() => setSelected(item.key)}
+            />
           ))}
         </div>
       </Drawer>

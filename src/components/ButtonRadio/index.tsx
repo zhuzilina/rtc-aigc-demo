@@ -18,7 +18,8 @@ interface IProps {
 
 function ButtonRadio(props: IProps) {
   const { value, onChange, options } = props;
-  const selected = useMemo(() => options.find((item) => item.key === value), [value]) || options?.[0];
+  const selected =
+    useMemo(() => options.find((item) => item.key === value), [value]) || options?.[0];
   const handleClick = (key: string) => {
     onChange?.(key);
   };
@@ -26,7 +27,12 @@ function ButtonRadio(props: IProps) {
   return (
     <div className={styles.wrapper}>
       {options.map(({ label, key }) => (
-        <Button type="text" key={key} className={`${styles.item} ${key === selected.key ? styles.selected : ''}`} onClick={() => handleClick(key)}>
+        <Button
+          type="text"
+          key={key}
+          className={`${styles.item} ${key === selected.key ? styles.selected : ''}`}
+          onClick={() => handleClick(key)}
+        >
           <span className={key === selected.key ? styles['selected-text'] : ''}>{label}</span>
         </Button>
       ))}
