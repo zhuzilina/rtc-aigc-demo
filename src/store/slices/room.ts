@@ -231,15 +231,6 @@ export const roomSlice = createSlice({
           state.isUserTalking = userTalking;
         }
       }
-      /** 如果当前说话人是用户, 并且上一条记录是 AI 的话, 并且不成语句, 则是打断 */
-      if (userTalking) {
-        const lastMsg = state.msgHistory[state.msgHistory.length - 1];
-        const isAI = lastMsg.user === config.BotName;
-        if (!lastMsg.paragraph && isAI) {
-          lastMsg.isInterrupted = true;
-          state.msgHistory[state.msgHistory.length - 1] = lastMsg;
-        }
-      }
       utils.addMsgWithoutDuplicate(state.msgHistory, {
         user: payload.user,
         value: payload.text,

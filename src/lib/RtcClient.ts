@@ -28,6 +28,7 @@ import RTCAIAnsExtension from '@volcengine/rtc/extension-ainr';
 import openAPIs from '@/app/api';
 import aigcConfig from '@/config';
 import Utils from '@/utils/utils';
+import { COMMAND, INTERRUPT_PRIORITY } from '@/utils/handler';
 
 export interface IEventListener {
   handleError: (e: { errorCode: any }) => void;
@@ -152,6 +153,7 @@ export class RTCClient {
       {
         userId: this.config.uid!,
         extraInfo: JSON.stringify({
+          call_scene: 'RTC-AIGC',
           user_name: username,
           user_id: this.config.uid,
         }),
@@ -342,18 +344,26 @@ export class RTCClient {
   /**
    * @brief 命令 AIGC
    */
-  commandAudioBot = async (command: string) => {
+  commandAudioBot = (
+    command: COMMAND,
+    interruptMode = INTERRUPT_PRIORITY.NONE,
+    message = ''
+  ) => {
     if (this.audioBotEnabled) {
-      const res = await openAPIs.UpdateVoiceChat({
-        AppId: aigcConfig.BaseConfig.AppId,
-        BusinessId: aigcConfig.BaseConfig.BusinessId,
-        RoomId: this.basicInfo.room_id,
-        TaskId: this.basicInfo.user_id,
-        Command: command,
-      });
-      return res;
+      this.engine.sendUserBinaryMessage(
+        aigcConfig.BotName,
+        Utils.string2tlv(
+          JSON.stringify({
+            Command: command,
+            InterruptMode: interruptMode,
+            Message: message,
+          }),
+          'ctrl'
+        )
+      );
+      return;
     }
-    return Promise.reject(new Error('AI 命令调用失败'));
+    console.warn('Interrupt failed, bot not enabled.');
   };
 
   /**

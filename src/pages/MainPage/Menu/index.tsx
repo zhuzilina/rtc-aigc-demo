@@ -5,20 +5,44 @@
 
 import VERTC from '@volcengine/rtc';
 import { Tooltip, Typography } from '@arco-design/web-react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useVisionMode } from '@/lib/useCommon';
 import { RootState } from '@/store';
+import RtcClient from '@/lib/RtcClient';
 import Operation from './components/Operation';
 import { Questions } from '@/config';
+import { COMMAND, INTERRUPT_PRIORITY } from '@/utils/handler';
 import CameraArea from '../MainArea/Room/CameraArea';
+import { setCurrentMsg, setHistoryMsg } from '@/store/slices/room';
 import utils from '@/utils/utils';
 import styles from './index.module.less';
 
 function Menu() {
+  const dispatch = useDispatch();
   const room = useSelector((state: RootState) => state.room);
   const scene = room.scene;
   const isJoined = room?.isJoined;
   const isVisionMode = useVisionMode();
+
+  const handleQuestion = (question: string) => {
+    RtcClient.commandAudioBot(COMMAND.EXTERNAL_TEXT_TO_LLM, INTERRUPT_PRIORITY.HIGH, question);
+    dispatch(
+      setHistoryMsg({
+        text: question,
+        user: RtcClient.basicInfo.user_id,
+        paragraph: true,
+        definite: true,
+      })
+    );
+    dispatch(
+      setCurrentMsg({
+        text: question,
+        user: RtcClient.basicInfo.user_id,
+        paragraph: true,
+        definite: true,
+      })
+    );
+  };
 
   return (
     <div className={styles.wrapper}>
@@ -51,9 +75,9 @@ function Menu() {
       </div>
       {isJoined ? (
         <div className={`${styles.box} ${styles.questions}`}>
-          <div className={styles.title}>你可以问各类问题，比如</div>
+          <div className={styles.title}>点击下述问题进行提问:</div>
           {Questions[scene].map((question) => (
-            <div className={styles.line} key={question}>
+            <div onClick={() => handleQuestion(question)} className={styles.line} key={question}>
               {question}
             </div>
           ))}

@@ -22,6 +22,7 @@
   "scripts": {
     "dev": "npm run echo && npm run start",
     "start": "cross-env REACT_APP_LOCAL=cn  craco start",
+    "server:start": "node Server/app.js",
     "build": "craco build",
     "test": "craco test",
     "eject": "react-scripts eject",

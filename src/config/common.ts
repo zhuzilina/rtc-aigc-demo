@@ -104,7 +104,7 @@ export const AI_MODE_MAP: Partial<Record<AI_MODEL, AI_MODEL_MODE>> = {
 
 /**
  * @brief 豆包模型的 ID
- * @note 具体的模型 ID 请至 https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint 参看/创建
+ * @note 具体的模型 ID 请至 https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?config=%7B%7D 参看/创建
  *       模型 ID 即接入点 ID, 在上述链接中表格内 "接入点名称" 列中, 类似于 "ep-2024xxxxxx-xxx" 格式即是模型 ID。
  */
 export const ARK_V3_MODEL_ID: Partial<Record<AI_MODEL, string>> = {

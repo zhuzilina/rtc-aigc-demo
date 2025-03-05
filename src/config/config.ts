@@ -12,7 +12,7 @@ import {
   Welcome,
   Model,
   Voice,
-  LLM_BOT_ID,
+  // LLM_BOT_ID,
   AI_MODEL,
   AI_MODE_MAP,
   AI_MODEL_MODE,
@@ -36,20 +36,22 @@ export class ConfigFactory {
      */
     BusinessId: undefined,
     /**
-     * @brief 必填, 房间 ID, 自定义即可。
+     * @brief 必填, 房间 ID, 自定义即可，例如 "Room123"。
      */
-    RoomId: 'Your Room Id',
+    RoomId: 'Room123',
     /**
-     * @brief 必填, 当前和 AI 对话的用户的 ID, 自定义即可。
+     * @brief 必填, 当前和 AI 对话的用户的 ID, 自定义即可，例如 "User123"。
      */
-    UserId: 'Your User Id',
+    UserId: 'User123',
     /**
-     * @brief 必填, RTC Token, 由 AppId、RoomId、UserId、时间戳等等信息计算得出, 可于 https://console.volcengine.com/rtc/listRTC 列表中
+     * @brief 必填, RTC Token, 由 AppId、RoomId、UserId、时间戳等等信息计算得出。
+     *        测试跑通时，可于 https://console.volcengine.com/rtc/listRTC 列表中，
      *        找到对应 AppId 行中 "操作" 列的 "临时Token" 按钮点击进行生成, 用于本地 RTC 通信进房鉴权校验。
+     *        正式使用时可参考 https://www.volcengine.com/docs/6348/70121 通过代码生成 Token。
+     *        建议先使用临时 Token 尝试跑通。
      * @note 生成临时 Token 时, 页面上的 RoomId / UserId 填的与此处的 RoomId / UserId 保持一致。
-     *       正式使用时可通参考 https://www.volcengine.com/docs/6348/70121 通过代码生成 Token。
      */
-    Token: 'Your Token',
+    Token: 'Your RTC Token',
     /**
      * @brief 必填, TTS(语音合成) AppId, 可于 https://console.volcengine.com/speech/app 中获取, 若无可先创建应用。
      * @note 创建应用时, 需要选择 "语音合成" 服务, 并选择对应的 App 进行绑定。
@@ -106,15 +108,18 @@ export class ConfigFactory {
 
   get LLMConfig() {
     const params: Record<string, unknown> = {
+      Mode: AI_MODE_MAP[this.Model || ''] || AI_MODEL_MODE.CUSTOM,
+      EndPointId: ARK_V3_MODEL_ID[this.Model],
+      // BotId: LLM_BOT_ID[this.Model],
+      MaxTokens: 1024,
+      Temperature: 0.1,
+      TopP: 0.3,
+      SystemMessages: [this.Prompt as string],
       Prefill: true,
       ModelName: this.Model,
-      Mode: AI_MODE_MAP[this.Model || ''] || AI_MODEL_MODE.CUSTOM,
       ModelVersion: '1.0',
       WelcomeSpeech: this.WelcomeSpeech,
-      SystemMessages: [this.Prompt as string],
-      EndPointId: ARK_V3_MODEL_ID[this.Model],
       ModeSourceType: this.ModeSourceType,
-      BotId: LLM_BOT_ID[this.Model],
       APIKey: this.APIKey,
       Url: this.Url,
       Feature: JSON.stringify({ Http: true }),
@@ -129,20 +134,42 @@ export class ConfigFactory {
 
   get ASRConfig() {
     return {
-      AppId: this.BaseConfig.ASRAppId,
-      VolumeGain: 0.3,
+      Provider: 'volcano',
+      ProviderParams: {
+        /**
+         * @note 本示例代码使用的是小模型语音识别, 如感觉 ASR 效果不佳，可尝试使用大模型进行语音识别。
+         *       大模型的使用详情可参考 https://www.volcengine.com/docs/6348/1404673#volcanolmasrconfig
+         */
+        Mode: 'smallmodel',
+        AppId: this.BaseConfig.ASRAppId,
+        /**
+         * @note 具体流式语音识别服务对应的 Cluster ID，可在流式语音服务控制台开通对应服务后查询。
+         *       具体链接为: https://console.volcengine.com/speech/service/16
+         */
+        Cluster: 'volcengine_streaming_common',
+      },
       VADConfig: {
         SilenceTime: 600,
         SilenceThreshold: 200,
       },
+      VolumeGain: 0.3,
     };
   }
 
   get TTSConfig() {
     return {
-      AppId: this.BaseConfig.TTSAppId,
-      VoiceType: this.VoiceType,
-      Cluster: TTS_CLUSTER.TTS,
+      Provider: 'volcano',
+      ProviderParams: {
+        app: {
+          AppId: this.BaseConfig.TTSAppId,
+          Cluster: TTS_CLUSTER.TTS,
+        },
+        audio: {
+          voice_type: this.VoiceType,
+          speed_ratio: 1.0,
+        },
+      },
+      IgnoreBracketText: [1, 2, 3, 4, 5],
     };
   }
 

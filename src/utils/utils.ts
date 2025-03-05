@@ -152,8 +152,7 @@ class Utils {
   /**
    * @brief 将字符串包装成 TLV
    */
-  string2tlv(str: string) {
-    const type = 'func';
+  string2tlv(str: string, type: string) {
     const typeBuffer = new Uint8Array(4);
 
     for (let i = 0; i < type.length; i++) {

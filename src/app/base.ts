@@ -3,7 +3,7 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { Message } from '@arco-design/web-react';
+import { Modal } from '@arco-design/web-react';
 import { AIGC_PROXY_HOST } from '@/config';
 
 type Headers = Record<string, string>;
@@ -60,8 +60,9 @@ export const resultHandler = (res: any) => {
   if (Result === 'ok') {
     return Result;
   }
-  Message.error(`[${ResponseMetadata?.Action}]Failed(Reason: ${ResponseMetadata?.Error?.Code})`);
-  throw new Error(
-    `[${ResponseMetadata?.Action}]Failed(${JSON.stringify(ResponseMetadata, null, 2)})`
-  );
+  const error = ResponseMetadata?.Error?.Message || Result;
+  Modal.error({
+    title: '接口调用错误',
+    content: `[${ResponseMetadata?.Action}]Failed(Reason: ${error})`,
+  });
 };

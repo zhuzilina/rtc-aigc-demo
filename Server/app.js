@@ -20,11 +20,11 @@ app.use(cors({
  */
 const ACCOUNT_INFO = {
   /**
-   * @notes 必填
+   * @notes 必填, 在 https://console.volcengine.com/iam/keymanage/ 获取
    */
   accessKeyId: 'Your AK',
   /**
-   * @notes 必填
+   * @notes 必填, 在 https://console.volcengine.com/iam/keymanage/ 获取
    */
   secretKey: 'Your SK',
   /**

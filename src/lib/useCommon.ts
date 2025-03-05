@@ -5,7 +5,8 @@
 
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { MediaType } from '@volcengine/rtc';
+import VERTC, { MediaType } from '@volcengine/rtc';
+import { Modal } from '@arco-design/web-react';
 import Utils from '@/utils/utils';
 import RtcClient from '@/lib/RtcClient';
 import {
@@ -81,6 +82,15 @@ export const useJoin = (): [
 
   async function disPatchJoin(formValues: FormProps): Promise<boolean | undefined> {
     if (joining) {
+      return;
+    }
+
+    const isSupported = await VERTC.isSupported();
+    if (!isSupported) {
+      Modal.error({
+        title: '不支持 RTC',
+        content: '您的浏览器可能不支持 RTC 功能，请尝试更换浏览器或升级浏览器后再重试。',
+      });
       return;
     }
 

@@ -5,7 +5,12 @@
 
 import { useDispatch } from 'react-redux';
 import logger from './logger';
-import { setCurrentMsg, setHistoryMsg } from '@/store/slices/room';
+import {
+  setCurrentMsg,
+  setHistoryMsg,
+  setInterruptMsg,
+  updateAITalkState,
+} from '@/store/slices/room';
 import RtcClient from '@/lib/RtcClient';
 import Utils from '@/utils/utils';
 
@@ -26,6 +31,45 @@ export enum AGENT_BRIEF {
   FINISHED,
 }
 
+/**
+ * @brief 指令类型
+ */
+export enum COMMAND {
+  /**
+   * @brief 打断指令
+   */
+  INTERRUPT = 'interrupt',
+  /**
+   * @brief 发送外部文本驱动 TTS
+   */
+  EXTERNAL_TEXT_TO_SPEECH = 'ExternalTextToSpeech',
+  /**
+   * @brief 发送外部文本驱动 LLM
+   */
+  EXTERNAL_TEXT_TO_LLM = 'ExternalTextToLLM',
+}
+/**
+ * @brief 打断的类型
+ */
+export enum INTERRUPT_PRIORITY {
+  /**
+   * @brief 占位
+   */
+  NONE,
+  /**
+   * @brief 高优先级。传入信息直接打断交互，进行处理。
+   */
+  HIGH,
+  /**
+   * @brief 中优先级。等待当前交互结束后，进行处理。
+   */
+  MEDIUM,
+  /**
+   * @brief 低优先级。如当前正在发生交互，直接丢弃 Message 传入的信息。
+   */
+  LOW,
+}
+
 export const MessageTypeCode = {
   [MESSAGE_TYPE.SUBTITLE]: 1,
   [MESSAGE_TYPE.FUNCTION_CALL]: 2,
@@ -44,6 +88,17 @@ export const useMessageHandler = () => {
       const { Stage } = parsed || {};
       const { Code, Description } = Stage || {};
       logger.debug(Code, Description);
+      switch (Code) {
+        case AGENT_BRIEF.FINISHED:
+          dispatch(updateAITalkState({ isAITalking: false }));
+          break;
+        case AGENT_BRIEF.INTERRUPTED:
+          dispatch(updateAITalkState({ isAITalking: false }));
+          dispatch(setInterruptMsg());
+          break;
+        default:
+          break;
+      }
     },
     /**
      * @brief 字幕
@@ -85,8 +140,9 @@ export const useMessageHandler = () => {
           JSON.stringify({
             ToolCallID: parsed?.tool_calls?.[0]?.id,
             Content: map[name.toLocaleLowerCase().replaceAll('_', '')],
-          })
-        )
+          }),
+          'func',
+        ),
       );
     },
   };
