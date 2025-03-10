@@ -3,40 +3,11 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import config from '@/config';
 import { Msg, RoomState } from '@/store/slices/room';
 import RtcClient from '@/lib/RtcClient';
 
-interface UserBaseInfo {
-  deviceId?: string;
-  login_token?: string;
-}
 
 class Utils {
-  userBaseInfo: UserBaseInfo;
-
-  constructor() {
-    const userBaseInfo: UserBaseInfo = JSON.parse(localStorage.getItem('userBaseInfo') || '{}');
-    this.userBaseInfo = userBaseInfo;
-    this.init();
-  }
-
-  private init() {
-    if (!this.userBaseInfo.deviceId) {
-      const deviceId = uuidv4();
-      this.userBaseInfo.deviceId = deviceId;
-      localStorage.setItem('userBaseInfo', JSON.stringify(this.userBaseInfo));
-    }
-  }
-
-  getDeviceId = (): string => this.userBaseInfo.deviceId!;
-
-  setLoginToken = (token: string): void => {
-    this.userBaseInfo.login_token = token;
-  };
-
-  getLoginToken = (): string | null => config.BaseConfig.Token;
 
   formatTime = (time: number): string => {
     if (time < 0) {
@@ -68,53 +39,19 @@ class Utils {
     });
   };
 
+  /**
+   * @brief 获取 url 参数
+   */
   getUrlArgs = () => {
-    const args = {} as { [key: string]: string };
     const query = window.location.search.substring(1);
     const pairs = query.split('&');
-    for (let i = 0; i < pairs.length; i++) {
-      const pos = pairs[i].indexOf('=');
-      if (pos === -1) continue;
-      const name = pairs[i].substring(0, pos);
-      let value = pairs[i].substring(pos + 1);
-      value = decodeURIComponent(value);
-      args[name] = value;
-    }
-    return args;
-  };
-
-  checkLoginInfo = () => {
-    const { roomId } = this.getUrlArgs();
-    roomId && this.setSessionInfo({ roomId });
-    const _roomId = sessionStorage.getItem('roomId');
-    const _uid = sessionStorage.getItem('username');
-    let hasLogin = true;
-    if (!_roomId || !_uid) {
-      hasLogin = false;
-    } else if (
-      !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_roomId) ||
-      !/^[0-9a-zA-Z_\-@.]{1,128}$/.test(_uid)
-    ) {
-      hasLogin = false;
-    }
-    return hasLogin;
-  };
-
-  getLoginInfo = () => {
-    const roomId = sessionStorage.getItem('roomId') as string;
-    const username = sessionStorage.getItem('username') as string;
-    const publishAudio = sessionStorage.getItem('publishAudio');
-
-    return {
-      roomId,
-      username,
-      publishAudio,
-    };
-  };
-
-  removeLoginInfo = () => {
-    const variable = ['roomId', 'username', 'publishAudio'];
-    variable.forEach((v) => sessionStorage.removeItem(v));
+    return pairs.reduce<{ [key: string]: string }>((queries, pair) => {
+      const [key, value] = decodeURIComponent(pair).split('=');
+      if (key && value) {
+        queries[key] = value;
+      }
+      return queries;
+    }, {});
   };
 
   isPureObject = (target: any) => Object.prototype.toString.call(target).includes('Object');
