@@ -82,7 +82,7 @@ export const useMessageHandler = () => {
   const maps = {
     /**
      * @brief 接收状态变化信息
-     * @note https://www.volcengine.com/docs/6348/1415216
+     * @note https://www.volcengine.com/docs/6348/1415216?s=g
      */
     [MESSAGE_TYPE.BRIEF]: (parsed: AnyRecord) => {
       const { Stage } = parsed || {};
@@ -102,7 +102,7 @@ export const useMessageHandler = () => {
     },
     /**
      * @brief 字幕
-     * @note https://www.volcengine.com/docs/6348/1337284
+     * @note https://www.volcengine.com/docs/6348/1337284?s=g
      */
     [MESSAGE_TYPE.SUBTITLE]: (parsed: AnyRecord) => {
       const data = parsed.data?.[0] || {};
@@ -123,7 +123,7 @@ export const useMessageHandler = () => {
     },
     /**
      * @brief Function calling
-     * @note https://www.volcengine.com/docs/6348/1359441
+     * @note https://www.volcengine.com/docs/6348/1359441?s=g
      */
     [MESSAGE_TYPE.FUNCTION_CALL]: (parsed: AnyRecord) => {
       const name: string = parsed?.tool_calls?.[0]?.function?.name;

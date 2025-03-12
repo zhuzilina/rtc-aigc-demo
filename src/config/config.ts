@@ -23,12 +23,12 @@ export const CONVERSATION_SIGNATURE = 'conversation';
 /**
  * @brief RTC & AIGC 配置。
  * @notes 更多参数请参考
- *        https://www.volcengine.com/docs/6348/1404673
+ *        https://www.volcengine.com/docs/6348/1404673?s=g
  */
 export class ConfigFactory {
   BaseConfig = {
     /**
-     * @note 必填, RTC AppId 可于 https://console.volcengine.com/rtc/listRTC 中获取。
+     * @note 必填, RTC AppId 可于 https://console.volcengine.com/rtc/listRTC?s=g 中获取。
      */
     AppId: 'Your RTC AppId',
     /**
@@ -45,20 +45,20 @@ export class ConfigFactory {
     UserId: 'User123',
     /**
      * @brief 必填, RTC Token, 由 AppId、RoomId、UserId、时间戳等等信息计算得出。
-     *        测试跑通时，可于 https://console.volcengine.com/rtc/listRTC 列表中，
+     *        测试跑通时，可于 https://console.volcengine.com/rtc/listRTC?s=g 列表中，
      *        找到对应 AppId 行中 "操作" 列的 "临时Token" 按钮点击进行生成, 用于本地 RTC 通信进房鉴权校验。
-     *        正式使用时可参考 https://www.volcengine.com/docs/6348/70121 通过代码生成 Token。
+     *        正式使用时可参考 https://www.volcengine.com/docs/6348/70121?s=g 通过代码生成 Token。
      *        建议先使用临时 Token 尝试跑通。
      * @note 生成临时 Token 时, 页面上的 RoomId / UserId 填的与此处的 RoomId / UserId 保持一致。
      */
     Token: 'Your RTC Token',
     /**
-     * @brief 必填, TTS(语音合成) AppId, 可于 https://console.volcengine.com/speech/app 中获取, 若无可先创建应用。
+     * @brief 必填, TTS(语音合成) AppId, 可于 https://console.volcengine.com/speech/app?s=g 中获取, 若无可先创建应用。
      * @note 创建应用时, 需要选择 "语音合成" 服务, 并选择对应的 App 进行绑定。
      */
     TTSAppId: 'Your TTS AppId',
     /**
-     * @brief 必填, ASR(语音识别) AppId, 可于 https://console.volcengine.com/speech/app 中获取, 若无可先创建应用。
+     * @brief 必填, ASR(语音识别) AppId, 可于 https://console.volcengine.com/speech/app?s=g 中获取, 若无可先创建应用。
      * @note 创建应用时, 需要按需根据语言选择 "流式语音识别" 服务, 并选择对应的 App 进行绑定。
      */
     ASRAppId: 'Your ASR AppId',
@@ -138,13 +138,13 @@ export class ConfigFactory {
       ProviderParams: {
         /**
          * @note 本示例代码使用的是小模型语音识别, 如感觉 ASR 效果不佳，可尝试使用大模型进行语音识别。
-         *       大模型的使用详情可参考 https://www.volcengine.com/docs/6348/1404673#volcanolmasrconfig
+         *       大模型的使用详情可参考 https://www.volcengine.com/docs/6348/1404673#volcanolmasrconfig?s=g
          */
         Mode: 'smallmodel',
         AppId: this.BaseConfig.ASRAppId,
         /**
          * @note 具体流式语音识别服务对应的 Cluster ID，可在流式语音服务控制台开通对应服务后查询。
-         *       具体链接为: https://console.volcengine.com/speech/service/16
+         *       具体链接为: https://console.volcengine.com/speech/service/16?s=g
          */
         Cluster: 'volcengine_streaming_common',
       },

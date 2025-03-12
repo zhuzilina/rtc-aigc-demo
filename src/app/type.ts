@@ -12,7 +12,7 @@ export enum ACTIONS {
 /**
  * @brief 请求参数类型
  * @note OpenAPI 接口参数结构可能更新, 请参阅最新文档内容。
- * https://www.volcengine.com/docs/6348/1404673
+ * https://www.volcengine.com/docs/6348/1404673?s=g
  */
 export interface RequestParams {
   /**
