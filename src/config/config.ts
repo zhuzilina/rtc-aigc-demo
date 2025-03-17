@@ -58,10 +58,20 @@ export class ConfigFactory {
      */
     TTSAppId: 'Your TTS AppId',
     /**
+     * @brief 已开通需要的语音合成服务的token。
+     *        使用火山引擎双向流式语音合成服务时必填。  
+     */
+    TTSToken: undefined,
+    /**
      * @brief 必填, ASR(语音识别) AppId, 可于 https://console.volcengine.com/speech/app?s=g 中获取, 若无可先创建应用。
      * @note 创建应用时, 需要按需根据语言选择 "流式语音识别" 服务, 并选择对应的 App 进行绑定。
      */
     ASRAppId: 'Your ASR AppId',
+    /**
+     * @brief 已开通流式语音识别大模型服务 AppId 对应的 Access Token。
+     *        使用流式语音识别大模型服务时该参数为必填。  
+     */
+    ASRToken: undefined,
   };
 
   Model: AI_MODEL = Model[SCENE.INTELLIGENT_ASSISTANT];
@@ -142,6 +152,7 @@ export class ConfigFactory {
          */
         Mode: 'smallmodel',
         AppId: this.BaseConfig.ASRAppId,
+        ...(this.BaseConfig.ASRToken ? { AccessToken: this.BaseConfig.ASRToken } : {}),
         /**
          * @note 具体流式语音识别服务对应的 Cluster ID，可在流式语音服务控制台开通对应服务后查询。
          *       具体链接为: https://console.volcengine.com/speech/service/16?s=g
@@ -162,6 +173,7 @@ export class ConfigFactory {
       ProviderParams: {
         app: {
           AppId: this.BaseConfig.TTSAppId,
+          ...(this.BaseConfig.TTSToken ? { Token: this.BaseConfig.TTSToken } : {}),
           Cluster: TTS_CLUSTER.TTS,
         },
         audio: {
