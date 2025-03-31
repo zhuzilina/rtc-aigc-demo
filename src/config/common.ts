@@ -11,6 +11,7 @@ import TRANSLATE from '@/assets/img/TRANSLATE.png';
 import CHILDREN_ENCYCLOPEDIA from '@/assets/img/CHILDREN_ENCYCLOPEDIA.png';
 import TEACHING_ASSISTANT from '@/assets/img/TEACHING_ASSISTANT.png';
 import CUSTOMER_SERVICE from '@/assets/img/CUSTOMER_SERVICE.png';
+import SCREEN_READER from '@/assets/img/SCREEN_READER.png';
 
 export enum ModelSourceType {
   Custom = 'Custom',
@@ -130,8 +131,11 @@ export enum SCENE {
   CUSTOMER_SERVICE = 'CUSTOMER_SERVICE',
   CHILDREN_ENCYCLOPEDIA = 'CHILDREN_ENCYCLOPEDIA',
   TEACHING_ASSISTANT = 'TEACHING_ASSISTANT',
+  SCREEN_READER = 'SCREEN_READER',
   CUSTOM = 'CUSTOM',
 }
+
+export const ScreenShareScene = [SCENE.SCREEN_READER];
 
 export const Icon = {
   [SCENE.INTELLIGENT_ASSISTANT]: INTELLIGENT_ASSISTANT,
@@ -140,6 +144,7 @@ export const Icon = {
   [SCENE.CHILDREN_ENCYCLOPEDIA]: CHILDREN_ENCYCLOPEDIA,
   [SCENE.CUSTOMER_SERVICE]: CUSTOMER_SERVICE,
   [SCENE.TEACHING_ASSISTANT]: TEACHING_ASSISTANT,
+  [SCENE.SCREEN_READER]: SCREEN_READER,
   [SCENE.CUSTOM]: INTELLIGENT_ASSISTANT,
 };
 
@@ -150,6 +155,7 @@ export const Name = {
   [SCENE.CHILDREN_ENCYCLOPEDIA]: '儿童百科',
   [SCENE.CUSTOMER_SERVICE]: '售后客服',
   [SCENE.TEACHING_ASSISTANT]: '课后助教',
+  [SCENE.SCREEN_READER]: '读屏助手',
   [SCENE.CUSTOM]: '自定义',
 };
 
@@ -163,6 +169,7 @@ export const Welcome = {
   [SCENE.CHILDREN_ENCYCLOPEDIA]: '你好小朋友，你的小脑袋里又有什么问题啦？',
   [SCENE.CUSTOMER_SERVICE]: '感谢您在我们餐厅用餐，请问您有什么问题需要反馈吗？',
   [SCENE.TEACHING_ASSISTANT]: '你碰到什么问题啦？让我来帮帮你。',
+  [SCENE.SCREEN_READER]: '欢迎使用读屏助手, 请开启屏幕采集，我会为你解说屏幕内容。',
   [SCENE.CUSTOM]: '',
 };
 
@@ -173,6 +180,7 @@ export const Model = {
   [SCENE.CHILDREN_ENCYCLOPEDIA]: AI_MODEL.DOUBAO_PRO_32K,
   [SCENE.CUSTOMER_SERVICE]: AI_MODEL.DOUBAO_PRO_32K,
   [SCENE.TEACHING_ASSISTANT]: AI_MODEL.VISION,
+  [SCENE.SCREEN_READER]: AI_MODEL.VISION,
   [SCENE.CUSTOM]: AI_MODEL.DOUBAO_PRO_32K,
 };
 
@@ -183,6 +191,7 @@ export const Voice = {
   [SCENE.CHILDREN_ENCYCLOPEDIA]: VOICE_TYPE.通用女声,
   [SCENE.CUSTOMER_SERVICE]: VOICE_TYPE.通用女声,
   [SCENE.TEACHING_ASSISTANT]: VOICE_TYPE.通用女声,
+  [SCENE.SCREEN_READER]: VOICE_TYPE.通用男声,
   [SCENE.CUSTOM]: VOICE_TYPE.通用女声,
 };
 
@@ -213,6 +222,7 @@ export const Questions = {
     '你们空调开得太冷了。',
   ],
   [SCENE.TEACHING_ASSISTANT]: ['这个单词是什么意思？', '这道题该怎么做？', '我的表情是什么样的？'],
+  [SCENE.SCREEN_READER]: ['屏幕里这是什么?', '这道题你会做吗?', '帮我翻译解说下屏幕里的内容?'],
   [SCENE.CUSTOM]: ['你能帮我解决什么问题?', '今天北京天气怎么样?', '你喜欢哪位流行歌手?'],
 };
 
@@ -299,5 +309,23 @@ export const Prompt = {
 ##约束
 - 回答问题要简明扼要，避免复杂冗长的表述，尽量不超过50个字；
 - 回答中不要有“图片”、“图中”等相关字眼；`,
+  [SCENE.SCREEN_READER]: `##人设
+你是人们的 AI 伙伴，可以通过 【屏幕共享实时解析】+【百科知识】来为人们提供服务。
+
+##技能
+1. 实时理解屏幕中的内容，包括图片、文字、窗口焦点，自动捕捉光标轨迹；
+2. 拥有丰富的百科知识；
+3. 如果用户询问与视频和图片有关的问题，请结合【屏幕共享实时解析】的内容、你的【知识】和【用户问题】进行回答；
+
+##风格
+语言风格可以随着屏幕内容和用户需求调整，可以是幽默搞笑的娱乐解说，也可以是严谨硬核的技术分析。
+- 如果屏幕内容是娱乐节目、动画、游戏等，语言风格偏幽默、活波一些，可以使用夸张的比喻、流行梗、弹幕互动式语言；
+- 如果屏幕内容是办公软件、新闻、文章等，语言风格偏专业、正经一些。
+
+## 约束
+不要有任何特殊标点符号和任何 Markdown 格式输出，例如 *，# 等。
+`,
   [SCENE.CUSTOM]: '',
 };
+
+export const isVisionMode = (model: AI_MODEL) => model.startsWith('Vision');

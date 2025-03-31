@@ -30,14 +30,11 @@ import {
   addAutoPlayFail,
   removeAutoPlayFail,
   updateAITalkState,
-  setHistoryMsg,
-  setCurrentMsg,
   updateNetworkQuality,
 } from '@/store/slices/room';
 import RtcClient, { IEventListener } from './RtcClient';
 
 import { setMicrophoneList, updateSelectedDevice } from '@/store/slices/device';
-import Utils from '@/utils/utils';
 import { useMessageHandler } from '@/utils/handler';
 
 const useRtcListeners = (): IEventListener => {
@@ -45,12 +42,19 @@ const useRtcListeners = (): IEventListener => {
   const { parser } = useMessageHandler();
   const playStatus = useRef<{ [key: string]: { audio: boolean; video: boolean } }>({});
 
-  const debounceSetHistoryMsg = Utils.debounce((text: string, user: string) => {
-    const isAudioEnable = RtcClient.getAudioBotEnabled();
-    if (isAudioEnable) {
-      dispatch(setHistoryMsg({ text, user }));
+  const handleTrackEnded = async (event: { kind: string; isScreen: boolean }) => {
+    const { kind, isScreen } = event;
+    /** 浏览器自带的屏幕共享关闭触发方式，通过 onTrackEnd 事件去关闭 */
+    if (isScreen && kind === 'video') {
+      await RtcClient.stopScreenCapture();
+      await RtcClient.unpublishScreenStream(MediaType.VIDEO);
+      dispatch(
+        updateLocalUser({
+          publishScreen: false,
+        })
+      );
     }
-  }, 600);
+  };
 
   const handleUserJoin = (e: onUserJoinedEvent) => {
     const extraInfo = JSON.parse(e.userInfo.extraInfo || '{}');
@@ -167,22 +171,6 @@ const useRtcListeners = (): IEventListener => {
     }
   };
 
-  const handleUserMessageReceived = (e: { userId: string; message: any }) => {
-    /** debounce 记录用户输入文字 */
-    if (e.message) {
-      const msgObj = JSON.parse(e.message || '{}');
-      if (msgObj.text) {
-        const { text: msg, definite, user_id: user } = msgObj;
-        if ((window as any)._debug_mode) {
-          dispatch(setHistoryMsg({ msg, user }));
-        } else {
-          debounceSetHistoryMsg(msg, user);
-        }
-        dispatch(setCurrentMsg({ msg, definite, user }));
-      }
-    }
-  };
-
   const handleAutoPlayFail = (event: AutoPlayFailedEvent) => {
     const { userId, kind } = event;
     let playUser = playStatus.current?.[userId] || {};
@@ -264,6 +252,7 @@ const useRtcListeners = (): IEventListener => {
     handleError,
     handleUserJoin,
     handleUserLeave,
+    handleTrackEnded,
     handleUserPublishStream,
     handleUserUnpublishStream,
     handleRemoteStreamStats,
@@ -271,7 +260,6 @@ const useRtcListeners = (): IEventListener => {
     handleLocalAudioPropertiesReport,
     handleRemoteAudioPropertiesReport,
     handleAudioDeviceStateChanged,
-    handleUserMessageReceived,
     handleAutoPlayFail,
     handlePlayerEvent,
     handleUserStartAudioCapture,

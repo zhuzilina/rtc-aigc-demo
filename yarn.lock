@@ -2210,10 +2210,10 @@
     "@typescript-eslint/types" "5.31.0"
     eslint-visitor-keys "^3.3.0"
 
-"@volcengine/rtc@4.58.9":
-  version "4.58.9"
-  resolved "https://registry.yarnpkg.com/@volcengine/rtc/-/rtc-4.58.9.tgz#841ebaddd5d4963c71abd33037bd76d1d490d928"
-  integrity sha512-nnXnNW9pVo8ynBSxVe0ikNIdxWfoSx5oOnwK7EoMCXdc2bJgHATpz/B+Kv2F1k4GjYAbo7ZcOm/g3cchvHgH5Q==
+"@volcengine/rtc@4.66.1":
+  version "4.66.1"
+  resolved "https://registry.yarnpkg.com/@volcengine/rtc/-/rtc-4.66.1.tgz#1934c269b31216f43718ae46b169c59ac5e474f2"
+  integrity sha512-APznH6eosmKJC1HYJJ8s6G3Mq3OSgw6ivv6uCiayM5QNMBj+GW6zxf+MVsk5rm6r4R92TLwQErWonJ8yzGO4xA==
   dependencies:
     eventemitter3 "^4.0.7"
 

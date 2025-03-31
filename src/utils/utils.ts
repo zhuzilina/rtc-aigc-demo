@@ -3,12 +3,7 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { Msg, RoomState } from '@/store/slices/room';
-import RtcClient from '@/lib/RtcClient';
-
-
 class Utils {
-
   formatTime = (time: number): string => {
     if (time < 0) {
       return '00:00';
@@ -46,9 +41,9 @@ class Utils {
     const query = window.location.search.substring(1);
     const pairs = query.split('&');
     return pairs.reduce<{ [key: string]: string }>((queries, pair) => {
-      const [key, value] = decodeURIComponent(pair).split('=');
+      const [key, value] = pair.split('=');
       if (key && value) {
-        queries[key] = value;
+        queries[key] = decodeURIComponent(value);
       }
       return queries;
     }, {});
@@ -57,34 +52,6 @@ class Utils {
   isPureObject = (target: any) => Object.prototype.toString.call(target).includes('Object');
 
   isArray = Array.isArray;
-
-  debounce = (func: (...args: any[]) => void, wait: number) => {
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    return function (...args: any[]) {
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-      }
-
-      timeoutId = setTimeout(() => {
-        func(...args);
-      }, wait);
-    };
-  };
-
-  addMsgWithoutDuplicate = (arr: RoomState['msgHistory'], added: Msg) => {
-    if (arr.length) {
-      const last = arr.at(-1)!;
-      const { user, value, isInterrupted } = last;
-      if (
-        (added.user === RtcClient.basicInfo.user_id && last.user === added.user) ||
-        (user === added.user && added.value.startsWith(value) && value.trim())
-      ) {
-        arr.pop();
-        added.isInterrupted = isInterrupted;
-      }
-    }
-    arr.push(added);
-  };
 
   /**
    * @brief 将字符串包装成 TLV
@@ -119,7 +86,7 @@ class Utils {
    * @note TLV 数据格式
    * | magic number | length(big-endian) | value |
    * @param {ArrayBufferLike} tlvBuffer
-   * @returns 
+   * @returns
    */
   tlv2String(tlvBuffer: ArrayBufferLike) {
     const typeBuffer = new Uint8Array(tlvBuffer, 0, 4);

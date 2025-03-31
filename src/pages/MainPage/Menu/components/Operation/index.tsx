@@ -6,16 +6,18 @@
 import { MediaType } from '@volcengine/rtc';
 import DeviceDrawerButton from '../DeviceDrawerButton';
 import { useVisionMode } from '@/lib/useCommon';
+import AISettingAnchor from '../AISettingAnchor';
 import Interrupt from '../Interrupt';
 import styles from './index.module.less';
 
 function Operation() {
-  const isVisionMode = useVisionMode();
+  const { isVisionMode, isScreenMode } = useVisionMode();
   return (
     <div className={`${styles.box} ${styles.device}`}>
       <Interrupt />
+      <AISettingAnchor />
       <DeviceDrawerButton />
-      {isVisionMode ? <DeviceDrawerButton type={MediaType.VIDEO} /> : ''}
+      {isVisionMode && !isScreenMode ? <DeviceDrawerButton type={MediaType.VIDEO} /> : ''}
     </div>
   );
 }

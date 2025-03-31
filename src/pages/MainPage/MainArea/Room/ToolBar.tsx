@@ -4,11 +4,12 @@
  */
 
 import { useSelector } from 'react-redux';
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Drawer } from '@arco-design/web-react';
 import { useDeviceState, useLeave } from '@/lib/useCommon';
 import { RootState } from '@/store';
-import { AI_MODEL } from '@/config';
+import { isVisionMode } from '@/config/common';
+import { ScreenShareScene } from '@/config';
 import utils from '@/utils/utils';
 import Menu from '../../Menu';
 
@@ -19,14 +20,25 @@ import MicOpenSVG from '@/assets/img/MicOpen.svg';
 import SettingSVG from '@/assets/img/Setting.svg';
 import MicCloseSVG from '@/assets/img/MicClose.svg';
 import LeaveRoomSVG from '@/assets/img/LeaveRoom.svg';
+import ScreenOnSVG from '@/assets/img/ScreenOn.svg';
+import ScreenOffSVG from '@/assets/img/ScreenOff.svg';
 
 function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className, ...rest } = props;
   const room = useSelector((state: RootState) => state.room);
   const [open, setOpen] = useState(false);
   const model = room.aiConfig.Config.LLMConfig?.ModelName;
+  const isScreenMode = ScreenShareScene.includes(room.scene);
   const leaveRoom = useLeave();
-  const { isAudioPublished, isVideoPublished, switchMic, switchCamera } = useDeviceState();
+  const {
+    isAudioPublished,
+    isVideoPublished,
+    isScreenPublished,
+    switchMic,
+    switchCamera,
+    switchScreenCapture,
+  } = useDeviceState();
+
   const handleSetting = () => {
     setOpen(true);
   };
@@ -41,13 +53,22 @@ function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
         className={style.btn}
         alt="mic"
       />
-      {model === AI_MODEL.VISION ? (
-        <img
-          src={isVideoPublished ? CameraOpenSVG : CameraCloseSVG}
-          onClick={() => switchCamera(true)}
-          className={style.btn}
-          alt="camera"
-        />
+      {isVisionMode(model) ? (
+        isScreenMode ? (
+          <img
+            src={isScreenPublished ? ScreenOnSVG : ScreenOffSVG}
+            onClick={() => switchScreenCapture()}
+            className={style.btn}
+            alt="screenShare"
+          />
+        ) : (
+          <img
+            src={isVideoPublished ? CameraOpenSVG : CameraCloseSVG}
+            onClick={() => switchCamera(true)}
+            className={style.btn}
+            alt="camera"
+          />
+        )
       ) : (
         ''
       )}
@@ -60,6 +81,7 @@ function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
           style={{
             width: 'max-content',
           }}
+          footer={null}
         >
           <Menu />
         </Drawer>
@@ -67,4 +89,4 @@ function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
     </div>
   );
 }
-export default ToolBar;
+export default memo(ToolBar);

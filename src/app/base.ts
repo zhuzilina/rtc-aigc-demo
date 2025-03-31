@@ -63,6 +63,6 @@ export const resultHandler = (res: any) => {
   const error = ResponseMetadata?.Error?.Message || Result;
   Modal.error({
     title: '接口调用错误',
-    content: `[${ResponseMetadata?.Action}]Failed(Reason: ${error})`,
+    content: `[${ResponseMetadata?.Action}]Failed(Reason: ${error}), 请参考 README 文档排查问题。`,
   });
 };

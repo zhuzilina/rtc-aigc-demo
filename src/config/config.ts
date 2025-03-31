@@ -3,6 +3,7 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
+import { StreamIndex } from '@volcengine/rtc';
 import {
   TTS_CLUSTER,
   ARK_V3_MODEL_ID,
@@ -16,6 +17,7 @@ import {
   AI_MODEL,
   AI_MODE_MAP,
   AI_MODEL_MODE,
+  isVisionMode,
 } from '.';
 
 export const CONVERSATION_SIGNATURE = 'conversation';
@@ -37,6 +39,7 @@ export class ConfigFactory {
     BusinessId: undefined,
     /**
      * @brief 必填, 房间 ID, 自定义即可，例如 "Room123"。
+     * @note 建议使用有特定规则、不重复的房间号名称。
      */
     RoomId: 'Room123',
     /**
@@ -59,7 +62,7 @@ export class ConfigFactory {
     TTSAppId: 'Your TTS AppId',
     /**
      * @brief 已开通需要的语音合成服务的token。
-     *        使用火山引擎双向流式语音合成服务时必填。  
+     *        使用火山引擎双向流式语音合成服务时 必填。
      */
     TTSToken: undefined,
     /**
@@ -69,7 +72,7 @@ export class ConfigFactory {
     ASRAppId: 'Your ASR AppId',
     /**
      * @brief 已开通流式语音识别大模型服务 AppId 对应的 Access Token。
-     *        使用流式语音识别大模型服务时该参数为必填。  
+     *        使用流式语音识别大模型服务时该参数为 必填。
      */
     ASRToken: undefined,
   };
@@ -116,6 +119,11 @@ export class ConfigFactory {
    */
   InterruptMode = true;
 
+  /**
+   * @brief 如果使用视觉模型，用的是哪种源，有摄像头采集流/屏幕流
+   */
+  VisionSourceType = StreamIndex.STREAM_INDEX_MAIN;
+
   get LLMConfig() {
     const params: Record<string, unknown> = {
       Mode: AI_MODE_MAP[this.Model || ''] || AI_MODEL_MODE.CUSTOM,
@@ -134,16 +142,21 @@ export class ConfigFactory {
       Url: this.Url,
       Feature: JSON.stringify({ Http: true }),
     };
-    if (this.Model === AI_MODEL.VISION) {
+    if (isVisionMode(this.Model)) {
       params.VisionConfig = {
         Enable: true,
+        SnapshotConfig: {
+          StreamType: this.VisionSourceType,
+          Height: 640,
+          ImagesLimit: 1,
+        },
       };
     }
     return params;
   }
 
   get ASRConfig() {
-    return {
+    const params: Record<string, any> = {
       Provider: 'volcano',
       ProviderParams: {
         /**
@@ -152,7 +165,6 @@ export class ConfigFactory {
          */
         Mode: 'smallmodel',
         AppId: this.BaseConfig.ASRAppId,
-        ...(this.BaseConfig.ASRToken ? { AccessToken: this.BaseConfig.ASRToken } : {}),
         /**
          * @note 具体流式语音识别服务对应的 Cluster ID，可在流式语音服务控制台开通对应服务后查询。
          *       具体链接为: https://console.volcengine.com/speech/service/16?s=g
@@ -165,15 +177,18 @@ export class ConfigFactory {
       },
       VolumeGain: 0.3,
     };
+    if (this.BaseConfig.ASRToken) {
+      params.ProviderParams.AccessToken = this.BaseConfig.ASRToken;
+    }
+    return params;
   }
 
   get TTSConfig() {
-    return {
+    const params: Record<string, any> = {
       Provider: 'volcano',
       ProviderParams: {
         app: {
           AppId: this.BaseConfig.TTSAppId,
-          ...(this.BaseConfig.TTSToken ? { Token: this.BaseConfig.TTSToken } : {}),
           Cluster: TTS_CLUSTER.TTS,
         },
         audio: {
@@ -183,6 +198,10 @@ export class ConfigFactory {
       },
       IgnoreBracketText: [1, 2, 3, 4, 5],
     };
+    if (this.BaseConfig.TTSToken) {
+      params.ProviderParams.app.Token = this.BaseConfig.TTSToken;
+    }
+    return params;
   }
 
   get aigcConfig() {

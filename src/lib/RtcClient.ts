@@ -3,7 +3,6 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-
 import VERTC, {
   MirrorType,
   StreamIndex,
@@ -23,8 +22,10 @@ import VERTC, {
   PlayerEvent,
   NetworkQuality,
   VideoRenderMode,
+  ScreenEncoderConfig,
 } from '@volcengine/rtc';
 import RTCAIAnsExtension from '@volcengine/rtc/extension-ainr';
+import { Message } from '@arco-design/web-react';
 import openAPIs from '@/app/api';
 import aigcConfig from '@/config';
 import Utils from '@/utils/utils';
@@ -34,6 +35,7 @@ export interface IEventListener {
   handleError: (e: { errorCode: any }) => void;
   handleUserJoin: (e: onUserJoinedEvent) => void;
   handleUserLeave: (e: onUserLeaveEvent) => void;
+  handleTrackEnded: (e: { kind: string; isScreen: boolean }) => void;
   handleUserPublishStream: (e: { userId: string; mediaType: MediaType }) => void;
   handleUserUnpublishStream: (e: {
     userId: string;
@@ -45,7 +47,6 @@ export interface IEventListener {
   handleLocalAudioPropertiesReport: (e: LocalAudioPropertiesInfo[]) => void;
   handleRemoteAudioPropertiesReport: (e: RemoteAudioPropertiesInfo[]) => void;
   handleAudioDeviceStateChanged: (e: DeviceInfo) => void;
-  handleUserMessageReceived: (e: { userId: string; message: any }) => void;
   handleAutoPlayFail: (e: AutoPlayFailedEvent) => void;
   handlePlayerEvent: (e: PlayerEvent) => void;
   handleUserStartAudioCapture: (e: { userId: string }) => void;
@@ -103,7 +104,9 @@ export class RTCClient {
       await this.engine.registerExtension(AIAnsExtension);
       AIAnsExtension.enable();
     } catch (error) {
-      console.error((error as any).message);
+      console.warn(
+        `当前环境不支持 AI 降噪, 此错误可忽略, 不影响实际使用, e: ${(error as any).message}`
+      );
     }
   };
 
@@ -111,6 +114,7 @@ export class RTCClient {
     handleError,
     handleUserJoin,
     handleUserLeave,
+    handleTrackEnded,
     handleUserPublishStream,
     handleUserUnpublishStream,
     handleRemoteStreamStats,
@@ -118,7 +122,6 @@ export class RTCClient {
     handleLocalAudioPropertiesReport,
     handleRemoteAudioPropertiesReport,
     handleAudioDeviceStateChanged,
-    handleUserMessageReceived,
     handleAutoPlayFail,
     handlePlayerEvent,
     handleUserStartAudioCapture,
@@ -129,6 +132,7 @@ export class RTCClient {
     this.engine.on(VERTC.events.onError, handleError);
     this.engine.on(VERTC.events.onUserJoined, handleUserJoin);
     this.engine.on(VERTC.events.onUserLeave, handleUserLeave);
+    this.engine.on(VERTC.events.onTrackEnded, handleTrackEnded);
     this.engine.on(VERTC.events.onUserPublishStream, handleUserPublishStream);
     this.engine.on(VERTC.events.onUserUnpublishStream, handleUserUnpublishStream);
     this.engine.on(VERTC.events.onRemoteStreamStats, handleRemoteStreamStats);
@@ -136,7 +140,6 @@ export class RTCClient {
     this.engine.on(VERTC.events.onAudioDeviceStateChanged, handleAudioDeviceStateChanged);
     this.engine.on(VERTC.events.onLocalAudioPropertiesReport, handleLocalAudioPropertiesReport);
     this.engine.on(VERTC.events.onRemoteAudioPropertiesReport, handleRemoteAudioPropertiesReport);
-    this.engine.on(VERTC.events.onUserMessageReceived, handleUserMessageReceived);
     this.engine.on(VERTC.events.onAutoplayFailed, handleAutoPlayFail);
     this.engine.on(VERTC.events.onPlayerEvent, handlePlayerEvent);
     this.engine.on(VERTC.events.onUserStartAudioCapture, handleUserStartAudioCapture);
@@ -193,21 +196,42 @@ export class RTCClient {
     audioOutputs: MediaDeviceInfo[];
     videoInputs: MediaDeviceInfo[];
   }> {
-    const { video, audio = true } = props || {};
+    const { video = false, audio = true } = props || {};
     let audioInputs: MediaDeviceInfo[] = [];
     let audioOutputs: MediaDeviceInfo[] = [];
     let videoInputs: MediaDeviceInfo[] = [];
+    const { video: hasVideoPermission, audio: hasAudioPermission } = await VERTC.enableDevices({
+      video,
+      audio,
+    });
     if (audio) {
       const inputs = await VERTC.enumerateAudioCaptureDevices();
       const outputs = await VERTC.enumerateAudioPlaybackDevices();
       audioInputs = inputs.filter((i) => i.deviceId && i.kind === 'audioinput');
       audioOutputs = outputs.filter((i) => i.deviceId && i.kind === 'audiooutput');
       this._audioCaptureDevice = audioInputs.filter((i) => i.deviceId)?.[0]?.deviceId;
+      if (hasAudioPermission) {
+        if (!audioInputs?.length) {
+          Message.error('无麦克风设备, 请先确认设备情况。');
+        }
+        if (!audioOutputs?.length) {
+          Message.error('无扬声器设备, 请先确认设备情况。');
+        }
+      } else {
+        Message.error('暂无麦克风设备权限, 请先确认设备权限授予情况。');
+      }
     }
     if (video) {
       videoInputs = await VERTC.enumerateVideoCaptureDevices();
       videoInputs = videoInputs.filter((i) => i.deviceId && i.kind === 'videoinput');
       this._videoCaptureDevice = videoInputs?.[0]?.deviceId;
+      if (hasVideoPermission) {
+        if (!videoInputs?.length) {
+          Message.error('无摄像头设备, 请先确认设备情况。');
+        }
+      } else {
+        Message.error('暂无摄像头设备权限, 请先确认设备权限授予情况。');
+      }
     }
 
     return {
@@ -226,6 +250,16 @@ export class RTCClient {
     await this.engine.stopVideoCapture();
   };
 
+  startScreenCapture = async (enableAudio = false) => {
+    await this.engine.startScreenCapture({
+      enableAudio,
+    });
+  };
+
+  stopScreenCapture = async () => {
+    await this.engine.stopScreenCapture();
+  };
+
   startAudioCapture = async (mic?: string) => {
     await this.engine.startAudioCapture(mic || this._audioCaptureDevice);
   };
@@ -240,6 +274,18 @@ export class RTCClient {
 
   unpublishStream = (mediaType: MediaType) => {
     this.engine.unpublishStream(mediaType);
+  };
+
+  publishScreenStream = async (mediaType: MediaType) => {
+    await this.engine.publishScreen(mediaType);
+  };
+
+  unpublishScreenStream = async (mediaType: MediaType) => {
+    await this.engine.unpublishScreen(mediaType);
+  };
+
+  setScreenEncoderConfig = async (description: ScreenEncoderConfig) => {
+    await this.engine.setScreenEncoderConfig(description);
   };
 
   /**
@@ -286,12 +332,19 @@ export class RTCClient {
     return this.engine.setLocalVideoMirrorType(type);
   };
 
-  setLocalVideoPlayer = (userId: string, renderDom?: string | HTMLElement) => {
-    return this.engine.setLocalVideoPlayer(StreamIndex.STREAM_INDEX_MAIN, {
-      renderDom,
-      userId,
-      renderMode: VideoRenderMode.RENDER_MODE_HIDDEN,
-    });
+  setLocalVideoPlayer = (
+    userId: string,
+    renderDom?: string | HTMLElement,
+    isScreenShare = false
+  ) => {
+    return this.engine.setLocalVideoPlayer(
+      isScreenShare ? StreamIndex.STREAM_INDEX_SCREEN : StreamIndex.STREAM_INDEX_MAIN,
+      {
+        renderDom,
+        userId,
+        renderMode: VideoRenderMode.RENDER_MODE_FILL,
+      }
+    );
   };
 
   /**
@@ -344,11 +397,7 @@ export class RTCClient {
   /**
    * @brief 命令 AIGC
    */
-  commandAudioBot = (
-    command: COMMAND,
-    interruptMode = INTERRUPT_PRIORITY.NONE,
-    message = ''
-  ) => {
+  commandAudioBot = (command: COMMAND, interruptMode = INTERRUPT_PRIORITY.NONE, message = '') => {
     if (this.audioBotEnabled) {
       this.engine.sendUserBinaryMessage(
         aigcConfig.BotName,

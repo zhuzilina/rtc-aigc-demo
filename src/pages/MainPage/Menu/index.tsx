@@ -4,6 +4,7 @@
  */
 
 import VERTC from '@volcengine/rtc';
+import { useEffect, useState } from 'react';
 import { Tooltip, Typography } from '@arco-design/web-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useVisionMode } from '@/lib/useCommon';
@@ -13,36 +14,38 @@ import Operation from './components/Operation';
 import { Questions } from '@/config';
 import { COMMAND, INTERRUPT_PRIORITY } from '@/utils/handler';
 import CameraArea from '../MainArea/Room/CameraArea';
-import { setCurrentMsg, setHistoryMsg } from '@/store/slices/room';
+import { setHistoryMsg, setInterruptMsg } from '@/store/slices/room';
 import utils from '@/utils/utils';
+import packageJson from '../../../../package.json';
 import styles from './index.module.less';
 
 function Menu() {
   const dispatch = useDispatch();
+  const [question, setQuestion] = useState('');
   const room = useSelector((state: RootState) => state.room);
   const scene = room.scene;
   const isJoined = room?.isJoined;
   const isVisionMode = useVisionMode();
 
-  const handleQuestion = (question: string) => {
-    RtcClient.commandAudioBot(COMMAND.EXTERNAL_TEXT_TO_LLM, INTERRUPT_PRIORITY.HIGH, question);
-    dispatch(
-      setHistoryMsg({
-        text: question,
-        user: RtcClient.basicInfo.user_id,
-        paragraph: true,
-        definite: true,
-      })
-    );
-    dispatch(
-      setCurrentMsg({
-        text: question,
-        user: RtcClient.basicInfo.user_id,
-        paragraph: true,
-        definite: true,
-      })
-    );
+  const handleQuestion = (que: string) => {
+    RtcClient.commandAudioBot(COMMAND.EXTERNAL_TEXT_TO_LLM, INTERRUPT_PRIORITY.HIGH, que);
+    setQuestion(que);
   };
+
+  useEffect(() => {
+    if (question && !room.isAITalking) {
+      dispatch(setInterruptMsg());
+      dispatch(
+        setHistoryMsg({
+          text: question,
+          user: RtcClient.basicInfo.user_id,
+          paragraph: true,
+          definite: true,
+        })
+      );
+      setQuestion('');
+    }
+  }, [question, room.isAITalking]);
 
   return (
     <div className={styles.wrapper}>
@@ -52,7 +55,7 @@ function Menu() {
         </div>
       ) : null}
       <div className={`${styles.box} ${styles.info}`}>
-        <div className={styles.bold}>Demo Version 1.4.0</div>
+        <div className={styles.bold}>Demo Version {packageJson.version}</div>
         <div className={styles.bold}>SDK Version {VERTC.getSdkVersion()}</div>
         {isJoined ? (
           <div className={styles.gray}>

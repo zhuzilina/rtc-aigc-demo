@@ -21,6 +21,14 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
   const isAIReady = msgHistory.length > 0;
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const isUserTextLoading = (owner: string) => {
+    return owner === userId && isUserTalking;
+  };
+
+  const isAITextLoading = (owner: string) => {
+    return owner === Config.BotName && isAITalking;
+  };
+
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
@@ -53,7 +61,9 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
             <div className={styles.content}>
               {value}
               <div className={styles['loading-wrapper']}>
-                {isAIReady && (isUserTalking || isAITalking) && index === msgHistory.length - 1 ? (
+                {isAIReady &&
+                (isUserTextLoading(user) || isAITextLoading(user)) &&
+                index === msgHistory.length - 1 ? (
                   <Loading gap={3} className={styles.loading} dotClassName={styles.dot} />
                 ) : (
                   ''

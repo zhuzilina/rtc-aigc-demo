@@ -11,7 +11,6 @@ import {
   RemoteAudioStats,
 } from '@volcengine/rtc';
 import config, { SCENE } from '@/config';
-import utils from '@/utils/utils';
 
 export interface IUser {
   username?: string;
@@ -33,6 +32,7 @@ export interface Msg {
   time: string;
   user: string;
   paragraph?: boolean;
+  definite?: boolean;
   isInterrupted?: boolean;
 }
 
@@ -59,6 +59,10 @@ export interface RoomState {
    * @brief AI 是否正在说话
    */
   isAITalking: boolean;
+  /**
+   * @brief AI 思考中
+   */
+  isAIThinking: boolean;
   /**
    * @brief 用户是否正在说话
    */
@@ -99,12 +103,14 @@ const initialState: RoomState = {
   scene: SCENE.INTELLIGENT_ASSISTANT,
   remoteUsers: [],
   localUser: {
-    publishAudio: true,
-    publishVideo: true,
+    publishAudio: false,
+    publishVideo: false,
+    publishScreen: false,
   },
   autoPlayFailUser: [],
   isJoined: false,
   isAIGCEnable: false,
+  isAIThinking: false,
   isAITalking: false,
   isUserTalking: false,
   networkQuality: NetworkQuality.UNKNOWN,
@@ -131,15 +137,19 @@ export const roomSlice = createSlice({
       }
     ) => {
       state.roomId = payload.roomId;
-      state.localUser = payload.user;
+      state.localUser = {
+        ...state.localUser,
+        ...payload.user,
+      };
       state.isJoined = true;
     },
     localLeaveRoom: (state) => {
       state.roomId = undefined;
       state.time = -1;
       state.localUser = {
-        publishAudio: true,
-        publishVideo: true,
+        publishAudio: false,
+        publishVideo: false,
+        publishScreen: false,
       };
       state.remoteUsers = [];
       state.isJoined = false;
@@ -159,7 +169,7 @@ export const roomSlice = createSlice({
     updateLocalUser: (state, { payload }: { payload: Partial<LocalUser> }) => {
       state.localUser = {
         ...state.localUser,
-        ...payload,
+        ...(payload || {}),
       };
     },
 
@@ -204,7 +214,13 @@ export const roomSlice = createSlice({
       state.isAIGCEnable = payload.isAIGCEnable;
     },
     updateAITalkState: (state, { payload }) => {
+      state.isAIThinking = false;
+      state.isUserTalking = false;
       state.isAITalking = payload.isAITalking;
+    },
+    updateAIThinkState: (state, { payload }) => {
+      state.isAIThinking = payload.isAIThinking;
+      state.isUserTalking = false;
     },
     updateAIConfig: (state, { payload }) => {
       state.aiConfig = Object.assign(state.aiConfig, payload);
@@ -213,46 +229,80 @@ export const roomSlice = createSlice({
       state.msgHistory = [];
     },
     setHistoryMsg: (state, { payload }) => {
-      const paragraph = payload.paragraph;
-      const aiTalking = payload.user === config.BotName;
-      const userTalking = payload.user === state.localUser.userId;
-      if (paragraph) {
-        if (state.isAITalking) {
-          state.isAITalking = false;
-        }
-        if (state.isUserTalking) {
-          state.isUserTalking = false;
+      const { paragraph, definite } = payload;
+      /** 是否需要再创建新句子 */
+      const shouldCreateSentence = payload.definite;
+      state.isUserTalking = payload.user === state.localUser.userId;
+      if (state.msgHistory.length) {
+        const lastMsg = state.msgHistory.at(-1)!;
+        /** 当前讲话人更新字幕 */
+        if (lastMsg.user === payload.user) {
+          /** 如果上一句话是完整的 & 本次的话也是完整的, 则直接塞入 */
+          if (lastMsg.definite) {
+            state.msgHistory.push({
+              value: payload.text,
+              time: new Date().toString(),
+              user: payload.user,
+              definite,
+              paragraph,
+            });
+          } else {
+            /** 话未说完, 更新文字内容 */
+            lastMsg.value = payload.text;
+            lastMsg.time = new Date().toString();
+            lastMsg.paragraph = paragraph;
+            lastMsg.definite = definite;
+            lastMsg.user = payload.user;
+          }
+          /** 如果本次的话已经说完了, 提前塞入空字符串做准备 */
+          if (shouldCreateSentence) {
+            state.msgHistory.push({
+              value: '',
+              time: new Date().toString(),
+              user: '',
+            });
+          }
+        } else {
+          /** 换人说话了，塞入新句子 */
+          state.msgHistory.push({
+            value: payload.text,
+            time: new Date().toString(),
+            user: payload.user,
+            definite,
+            paragraph,
+          });
         }
       } else {
-        if (state.isAITalking !== aiTalking) {
-          state.isAITalking = aiTalking;
-        }
-        if (state.isUserTalking !== userTalking) {
-          state.isUserTalking = userTalking;
-        }
+        /** 首句话首字不会被打断 */
+        state.msgHistory.push({
+          value: payload.text,
+          time: new Date().toString(),
+          user: payload.user,
+          paragraph,
+        });
       }
-      utils.addMsgWithoutDuplicate(state.msgHistory, {
-        user: payload.user,
-        value: payload.text,
-        time: new Date().toLocaleString(),
-        isInterrupted: false,
-        paragraph,
-      });
     },
     setInterruptMsg: (state) => {
-      const msg = state.msgHistory[state.msgHistory.length - 1];
-      msg.isInterrupted = true;
-      state.msgHistory[state.msgHistory.length - 1] = msg;
+      state.isAITalking = false;
+      if (!state.msgHistory.length) {
+        return;
+      }
+      /** 找到最后一个末尾的字幕, 将其状态置换为打断 */
+      for (let id = state.msgHistory.length - 1; id >= 0; id--) {
+        const msg = state.msgHistory[id];
+        if (msg.value) {
+          if (!msg.definite) {
+            state.msgHistory[id].isInterrupted = true;
+          }
+          break;
+        }
+      }
     },
     clearCurrentMsg: (state) => {
       state.currentConversation = {};
       state.msgHistory = [];
       state.isAITalking = false;
       state.isUserTalking = false;
-    },
-    setCurrentMsg: (state, { payload }) => {
-      const { user, ...info } = payload;
-      state.currentConversation[user || state.localUser.userId] = info;
     },
   },
 });
@@ -270,9 +320,9 @@ export const {
   clearAutoPlayFail,
   updateAIGCState,
   updateAITalkState,
+  updateAIThinkState,
   updateAIConfig,
   setHistoryMsg,
-  setCurrentMsg,
   clearHistoryMsg,
   clearCurrentMsg,
   setInterruptMsg,

@@ -1,11 +1,11 @@
 {
   "name": "aigc",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "license": "BSD-3-Clause",
   "private": true,
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.3",
-    "@volcengine/rtc": "4.58.9",
+    "@volcengine/rtc": "4.66.1",
     "@arco-design/web-react": "^2.65.0",
     "autolinker": "^4.0.0",
     "i18next": "^21.8.16",

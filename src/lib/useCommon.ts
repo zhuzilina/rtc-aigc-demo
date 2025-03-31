@@ -27,7 +27,7 @@ import {
   setDevicePermissions,
 } from '@/store/slices/device';
 import logger from '@/utils/logger';
-import aigcConfig, { AI_MODEL } from '@/config';
+import aigcConfig, { ScreenShareScene, isVisionMode } from '@/config';
 
 export interface FormProps {
   username: string;
@@ -37,148 +37,9 @@ export interface FormProps {
 
 export const useVisionMode = () => {
   const room = useSelector((state: RootState) => state.room);
-  return [AI_MODEL.VISION].includes(room.aiConfig?.Config?.LLMConfig.ModelName);
-};
-
-export const useGetDevicePermission = () => {
-  const [permission, setPermission] = useState<{
-    audio: boolean;
-  }>();
-
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    (async () => {
-      const permission = await RtcClient.checkPermission();
-      dispatch(setDevicePermissions(permission));
-      setPermission(permission);
-    })();
-  }, [dispatch]);
-  return permission;
-};
-
-export const useJoin = (): [
-  boolean,
-  (formValues: FormProps, fromRefresh: boolean) => Promise<void | boolean>
-] => {
-  const devicePermissions = useSelector((state: RootState) => state.device.devicePermissions);
-  const room = useSelector((state: RootState) => state.room);
-
-  const dispatch = useDispatch();
-
-  const [joining, setJoining] = useState(false);
-  const listeners = useRtcListeners();
-
-  const handleAIGCModeStart = async () => {
-    if (room.isAIGCEnable) {
-      await RtcClient.stopAudioBot();
-      dispatch(clearCurrentMsg());
-      await RtcClient.startAudioBot();
-    } else {
-      await RtcClient.startAudioBot();
-    }
-    dispatch(updateAIGCState({ isAIGCEnable: true }));
-  };
-
-  async function disPatchJoin(formValues: FormProps): Promise<boolean | undefined> {
-    if (joining) {
-      return;
-    }
-
-    const isSupported = await VERTC.isSupported();
-    if (!isSupported) {
-      Modal.error({
-        title: '不支持 RTC',
-        content: '您的浏览器可能不支持 RTC 功能，请尝试更换浏览器或升级浏览器后再重试。',
-      });
-      return;
-    }
-
-    setJoining(true);
-    const { username, roomId } = formValues;
-    const isVisionMode = aigcConfig.Model === AI_MODEL.VISION;
-
-    const token = aigcConfig.BaseConfig.Token;
-
-    /** 1. Create RTC Engine */
-    await RtcClient.createEngine({
-      appId: aigcConfig.BaseConfig.AppId,
-      roomId,
-      uid: username,
-    } as any);
-
-    /** 2.1 Set events callbacks */
-    RtcClient.addEventListeners(listeners);
-
-    /** 2.2 RTC starting to join room */
-    await RtcClient.joinRoom(token!, username);
-    console.log(' ------ userJoinRoom\n', `roomId: ${roomId}\n`, `uid: ${username}`);
-    /** 3. Set users' devices info */
-    const mediaDevices = await RtcClient.getDevices({
-      audio: true,
-      video: isVisionMode,
-    });
-
-    if (devicePermissions.audio) {
-      try {
-        await RtcClient.startAudioCapture();
-        // RtcClient.setAudioVolume(30);
-      } catch (e) {
-        logger.debug('No permission for mic');
-      }
-    }
-
-    if (devicePermissions.video && isVisionMode) {
-      try {
-        await RtcClient.startVideoCapture();
-      } catch (e) {
-        logger.debug('No permission for camera');
-      }
-    }
-
-    dispatch(
-      localJoinRoom({
-        roomId,
-        user: {
-          username,
-          userId: username,
-          publishAudio: true,
-          publishVideo: devicePermissions.video && isVisionMode,
-        },
-      })
-    );
-    dispatch(
-      updateSelectedDevice({
-        selectedMicrophone: mediaDevices.audioInputs[0]?.deviceId,
-        selectedCamera: mediaDevices.videoInputs[0]?.deviceId,
-      })
-    );
-    dispatch(updateMediaInputs(mediaDevices));
-
-    setJoining(false);
-
-    Utils.setSessionInfo({
-      username,
-      roomId,
-      publishAudio: true,
-    });
-
-    handleAIGCModeStart();
-  }
-
-  return [joining, disPatchJoin];
-};
-
-export const useLeave = () => {
-  const dispatch = useDispatch();
-
-  return async function () {
-    dispatch(localLeaveRoom());
-    dispatch(updateAIGCState({ isAIGCEnable: false }));
-    await Promise.all([RtcClient.stopAudioCapture]);
-    RtcClient.leaveRoom();
-    dispatch(clearHistoryMsg());
-    dispatch(clearCurrentMsg());
+  return {
+    isVisionMode: isVisionMode(room.aiConfig?.Config?.LLMConfig.ModelName),
+    isScreenMode: ScreenShareScene.includes(room.scene),
   };
 };
 
@@ -188,7 +49,7 @@ export const useDeviceState = () => {
   const localUser = room.localUser;
   const isAudioPublished = localUser.publishAudio;
   const isVideoPublished = localUser.publishVideo;
-
+  const isScreenPublished = localUser.publishScreen;
   const queryDevices = async (type: MediaType) => {
     const mediaDevices = await RtcClient.getDevices({
       audio: type === MediaType.AUDIO,
@@ -220,40 +81,207 @@ export const useDeviceState = () => {
     return mediaDevices;
   };
 
-  const switchMic = (publish = true) => {
-    if (publish) {
-      !isAudioPublished
+  const switchMic = async (controlPublish = true) => {
+    if (controlPublish) {
+      await (!isAudioPublished
         ? RtcClient.publishStream(MediaType.AUDIO)
-        : RtcClient.unpublishStream(MediaType.AUDIO);
+        : RtcClient.unpublishStream(MediaType.AUDIO));
     }
     queryDevices(MediaType.AUDIO);
-    !isAudioPublished ? RtcClient.startAudioCapture() : RtcClient.stopAudioCapture();
+    await (!isAudioPublished ? RtcClient.startAudioCapture() : RtcClient.stopAudioCapture());
     dispatch(
       updateLocalUser({
-        publishAudio: !localUser.publishAudio,
+        publishAudio: !isAudioPublished,
       })
     );
   };
 
-  const switchCamera = (publish = true) => {
-    if (publish) {
-      !isVideoPublished
+  const switchCamera = async (controlPublish = true) => {
+    if (controlPublish) {
+      await (!isVideoPublished
         ? RtcClient.publishStream(MediaType.VIDEO)
-        : RtcClient.unpublishStream(MediaType.VIDEO);
+        : RtcClient.unpublishStream(MediaType.VIDEO));
     }
     queryDevices(MediaType.VIDEO);
-    !localUser.publishVideo ? RtcClient.startVideoCapture() : RtcClient.stopVideoCapture();
+    await (!isVideoPublished ? RtcClient.startVideoCapture() : RtcClient.stopVideoCapture());
     dispatch(
       updateLocalUser({
-        publishVideo: !localUser.publishVideo,
+        publishVideo: !isVideoPublished,
       })
     );
+  };
+
+  const switchScreenCapture = async (controlPublish = true) => {
+    try {
+      if (controlPublish) {
+        await (!isScreenPublished
+          ? RtcClient.publishScreenStream(MediaType.VIDEO)
+          : RtcClient.unpublishScreenStream(MediaType.VIDEO));
+      }
+      await (!isScreenPublished ? RtcClient.startScreenCapture() : RtcClient.stopScreenCapture());
+      dispatch(
+        updateLocalUser({
+          publishScreen: !isScreenPublished,
+        })
+      );
+    } catch {
+      console.warn('Not Authorized.');
+    }
   };
 
   return {
     isAudioPublished,
     isVideoPublished,
+    isScreenPublished,
     switchMic,
     switchCamera,
+    switchScreenCapture,
+  };
+};
+
+export const useGetDevicePermission = () => {
+  const [permission, setPermission] = useState<{
+    audio: boolean;
+  }>();
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    (async () => {
+      const permission = await RtcClient.checkPermission();
+      dispatch(setDevicePermissions(permission));
+      setPermission(permission);
+    })();
+  }, [dispatch]);
+  return permission;
+};
+
+export const useJoin = (): [
+  boolean,
+  (formValues: FormProps, fromRefresh: boolean) => Promise<void | boolean>
+] => {
+  const devicePermissions = useSelector((state: RootState) => state.device.devicePermissions);
+  const room = useSelector((state: RootState) => state.room);
+
+  const dispatch = useDispatch();
+
+  const { switchCamera, switchMic } = useDeviceState();
+  const [joining, setJoining] = useState(false);
+  const listeners = useRtcListeners();
+
+  const handleAIGCModeStart = async () => {
+    if (room.isAIGCEnable) {
+      await RtcClient.stopAudioBot();
+      dispatch(clearCurrentMsg());
+      await RtcClient.startAudioBot();
+    } else {
+      await RtcClient.startAudioBot();
+    }
+    dispatch(updateAIGCState({ isAIGCEnable: true }));
+  };
+
+  async function disPatchJoin(formValues: FormProps): Promise<boolean | undefined> {
+    if (joining) {
+      return;
+    }
+
+    const isSupported = await VERTC.isSupported();
+    if (!isSupported) {
+      Modal.error({
+        title: '不支持 RTC',
+        content: '您的浏览器可能不支持 RTC 功能，请尝试更换浏览器或升级浏览器后再重试。',
+      });
+      return;
+    }
+
+    setJoining(true);
+    const { username, roomId } = formValues;
+    const isVision = isVisionMode(aigcConfig.Model);
+    const shouldGetVideoPermission = isVision && !ScreenShareScene.includes(room.scene);
+
+    const token = aigcConfig.BaseConfig.Token;
+
+    /** 1. Create RTC Engine */
+    const engineParams = {
+      appId: aigcConfig.BaseConfig.AppId,
+      roomId,
+      uid: username,
+    };
+    await RtcClient.createEngine(engineParams);
+
+    /** 2.1 Set events callbacks */
+    RtcClient.addEventListeners(listeners);
+
+    /** 2.2 RTC starting to join room */
+    await RtcClient.joinRoom(token!, username);
+    console.log(' ------ userJoinRoom\n', `roomId: ${roomId}\n`, `uid: ${username}`);
+    /** 3. Set users' devices info */
+    const mediaDevices = await RtcClient.getDevices({
+      audio: true,
+      video: shouldGetVideoPermission,
+    });
+
+    dispatch(
+      localJoinRoom({
+        roomId,
+        user: {
+          username,
+          userId: username,
+        },
+      })
+    );
+    dispatch(
+      updateSelectedDevice({
+        selectedMicrophone: mediaDevices.audioInputs[0]?.deviceId,
+        selectedCamera: mediaDevices.videoInputs[0]?.deviceId,
+      })
+    );
+    dispatch(updateMediaInputs(mediaDevices));
+
+    setJoining(false);
+
+    if (devicePermissions.audio) {
+      try {
+        await switchMic();
+        // RtcClient.setAudioVolume(30);
+      } catch (e) {
+        logger.debug('No permission for mic');
+      }
+    }
+
+    if (devicePermissions.video && shouldGetVideoPermission) {
+      try {
+        await switchCamera();
+      } catch (e) {
+        logger.debug('No permission for camera');
+      }
+    }
+
+    Utils.setSessionInfo({
+      username,
+      roomId,
+      publishAudio: true,
+    });
+
+    handleAIGCModeStart();
+  }
+
+  return [joining, disPatchJoin];
+};
+
+export const useLeave = () => {
+  const dispatch = useDispatch();
+
+  return async function () {
+    await Promise.all([
+      RtcClient.stopAudioCapture,
+      RtcClient.stopScreenCapture,
+      RtcClient.stopVideoCapture,
+    ]);
+    await RtcClient.leaveRoom();
+    dispatch(clearHistoryMsg());
+    dispatch(clearCurrentMsg());
+    dispatch(localLeaveRoom());
+    dispatch(updateAIGCState({ isAIGCEnable: false }));
   };
 };

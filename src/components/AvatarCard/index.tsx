@@ -4,6 +4,8 @@
  */
 
 import { useSelector } from 'react-redux';
+import { Button } from '@arco-design/web-react';
+import { useState } from 'react';
 import AISettings from '../AISettings';
 import style from './index.module.less';
 import DouBaoAvatar from '@/assets/img/DoubaoAvatarGIF.webp';
@@ -14,16 +16,24 @@ interface IAvatarCardProps extends React.HTMLAttributes<HTMLDivElement> {
   avatar?: string;
 }
 
-const ReversedVoiceType = Object.entries(VOICE_TYPE).reduce<Record<string, string>>((acc, [key, value]) => {
-  acc[value] = key;
-  return acc;
-}, {});
+const ReversedVoiceType = Object.entries(VOICE_TYPE).reduce<Record<string, string>>(
+  (acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  },
+  {}
+);
 
 function AvatarCard(props: IAvatarCardProps) {
   const room = useSelector((state: RootState) => state.room);
+  const [open, setOpen] = useState(false);
   const scene = room.scene;
   const { LLMConfig, TTSConfig } = room.aiConfig.Config || {};
   const { avatar, className, ...rest } = props;
+  const voice = TTSConfig.ProviderParams.audio.voice_type;
+
+  const handleOpenDrawer = () => setOpen(true);
+  const handleCloseDrawer = () => setOpen(false);
 
   return (
     <div className={`${style.card} ${className}`} {...rest}>
@@ -40,11 +50,12 @@ function AvatarCard(props: IAvatarCardProps) {
       <div className={style['text-wrapper']}>
         <div className={style['user-info']}>
           <div className={style.title}>{Name[scene]}</div>
-          <div className={style.description}>
-            声源来自 {ReversedVoiceType[TTSConfig?.VoiceType || '']}
-          </div>
+          <div className={style.description}>声源来自 {ReversedVoiceType[voice || '']}</div>
           <div className={style.description}>模型 {LLMConfig.ModelName}</div>
-          <AISettings />
+          <AISettings open={open} onOk={handleCloseDrawer} onCancel={handleCloseDrawer} />
+          <Button className={style.button} onClick={handleOpenDrawer}>
+            <div className={style['button-text']}>修改 AI 设定</div>
+          </Button>
         </div>
       </div>
     </div>

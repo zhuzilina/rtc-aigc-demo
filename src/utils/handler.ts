@@ -6,10 +6,10 @@
 import { useDispatch } from 'react-redux';
 import logger from './logger';
 import {
-  setCurrentMsg,
   setHistoryMsg,
   setInterruptMsg,
   updateAITalkState,
+  updateAIThinkState,
 } from '@/store/slices/room';
 import RtcClient from '@/lib/RtcClient';
 import Utils from '@/utils/utils';
@@ -89,11 +89,16 @@ export const useMessageHandler = () => {
       const { Code, Description } = Stage || {};
       logger.debug(Code, Description);
       switch (Code) {
+        case AGENT_BRIEF.THINKING:
+          dispatch(updateAIThinkState({ isAIThinking: true }));
+          break;
+        case AGENT_BRIEF.SPEAKING:
+          dispatch(updateAITalkState({ isAITalking: true }));
+          break;
         case AGENT_BRIEF.FINISHED:
           dispatch(updateAITalkState({ isAITalking: false }));
           break;
         case AGENT_BRIEF.INTERRUPTED:
-          dispatch(updateAITalkState({ isAITalking: false }));
           dispatch(setInterruptMsg());
           break;
         default:
@@ -118,7 +123,6 @@ export const useMessageHandler = () => {
             dispatch(setHistoryMsg({ text: msg, user, paragraph, definite }));
           }
         }
-        dispatch(setCurrentMsg({ msg, definite, user, paragraph }));
       }
     },
     /**
@@ -141,8 +145,8 @@ export const useMessageHandler = () => {
             ToolCallID: parsed?.tool_calls?.[0]?.id,
             Content: map[name.toLocaleLowerCase().replaceAll('_', '')],
           }),
-          'func',
-        ),
+          'func'
+        )
       );
     },
   };
