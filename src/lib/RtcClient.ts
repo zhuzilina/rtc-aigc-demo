@@ -70,8 +70,6 @@ export interface BasicBody {
   login_token: string | null;
 }
 
-export const AIAnsExtension = new RTCAIAnsExtension();
-
 /**
  * @brief RTC Core Client
  * @notes Refer to official website documentation to get more information about the API.
@@ -101,6 +99,7 @@ export class RTCClient {
 
     this.engine = VERTC.createEngine(this.config.appId);
     try {
+      const AIAnsExtension = new RTCAIAnsExtension();
       await this.engine.registerExtension(AIAnsExtension);
       AIAnsExtension.enable();
     } catch (error) {

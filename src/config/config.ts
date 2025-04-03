@@ -72,7 +72,9 @@ export class ConfigFactory {
     ASRAppId: 'Your ASR AppId',
     /**
      * @brief 已开通流式语音识别大模型服务 AppId 对应的 Access Token。
-     *        使用流式语音识别大模型服务时该参数为 必填。
+     * @note 使用流式语音识别 **大模型** 服务时必填, 可于 https://console.volcengine.com/speech/service/10011?AppID=6482372612&s=g 中查看。
+     * 注意, 如果填写了 ASRToken, Demo 会默认使用大模型模式，请留意相关资源是否已经开通。
+     * 默认为使用小模型，无需配置 ASRToken。
      */
     ASRToken: undefined,
   };
@@ -156,13 +158,13 @@ export class ConfigFactory {
   }
 
   get ASRConfig() {
-    const params: Record<string, any> = {
+    /**
+     * @brief SmallModelASRConfigs 为小模型的配置
+     * @note 本示例代码使用的是小模型语音识别, 如感觉 ASR 效果不佳，可尝试使用大模型进行语音识别。
+     */
+    const SmallModelASRConfigs = {
       Provider: 'volcano',
       ProviderParams: {
-        /**
-         * @note 本示例代码使用的是小模型语音识别, 如感觉 ASR 效果不佳，可尝试使用大模型进行语音识别。
-         *       大模型的使用详情可参考 https://www.volcengine.com/docs/6348/1404673#volcanolmasrconfig?s=g
-         */
         Mode: 'smallmodel',
         AppId: this.BaseConfig.ASRAppId,
         /**
@@ -171,16 +173,29 @@ export class ConfigFactory {
          */
         Cluster: 'volcengine_streaming_common',
       },
+      /**
+       * @note 小模型情况下, 建议使用 VAD 及音量采集设置, 以优化识别效果。
+       */
       VADConfig: {
         SilenceTime: 600,
         SilenceThreshold: 200,
       },
       VolumeGain: 0.3,
     };
-    if (this.BaseConfig.ASRToken) {
-      params.ProviderParams.AccessToken = this.BaseConfig.ASRToken;
-    }
-    return params;
+
+    /**
+     * @brief BigModelASRConfigs 为大模型的配置
+     * @note 大模型的使用详情可参考 https://www.volcengine.com/docs/6348/1404673#volcanolmasrconfig?s=g
+     */
+    const BigModelASRConfigs = {
+      Provider: 'volcano',
+      ProviderParams: {
+        Mode: 'bigmodel',
+        AppId: this.BaseConfig.ASRAppId,
+        AccessToken: this.BaseConfig.ASRToken,
+      },
+    };
+    return this.BaseConfig.ASRToken ? BigModelASRConfigs : SmallModelASRConfigs;
   }
 
   get TTSConfig() {
