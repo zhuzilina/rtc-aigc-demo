@@ -230,40 +230,18 @@ export const roomSlice = createSlice({
     },
     setHistoryMsg: (state, { payload }) => {
       const { paragraph, definite } = payload;
+      const lastMsg = state.msgHistory.at(-1)! || {};
       /** 是否需要再创建新句子 */
-      const shouldCreateSentence = payload.definite;
-      state.isUserTalking = payload.user === state.localUser.userId;
+      const fromBot = payload.user === config.BotName;
+      /**
+       * Bot 的语句以 definite 判断是否需要追加新内容
+       * User 的语句以 paragraph 判断是否需要追加新内容
+       */
+      const lastMsgCompleted = fromBot ? lastMsg.definite : lastMsg.paragraph;
+
       if (state.msgHistory.length) {
-        const lastMsg = state.msgHistory.at(-1)!;
-        /** 当前讲话人更新字幕 */
-        if (lastMsg.user === payload.user) {
-          /** 如果上一句话是完整的 & 本次的话也是完整的, 则直接塞入 */
-          if (lastMsg.definite) {
-            state.msgHistory.push({
-              value: payload.text,
-              time: new Date().toString(),
-              user: payload.user,
-              definite,
-              paragraph,
-            });
-          } else {
-            /** 话未说完, 更新文字内容 */
-            lastMsg.value = payload.text;
-            lastMsg.time = new Date().toString();
-            lastMsg.paragraph = paragraph;
-            lastMsg.definite = definite;
-            lastMsg.user = payload.user;
-          }
-          /** 如果本次的话已经说完了, 提前塞入空字符串做准备 */
-          if (shouldCreateSentence) {
-            state.msgHistory.push({
-              value: '',
-              time: new Date().toString(),
-              user: '',
-            });
-          }
-        } else {
-          /** 换人说话了，塞入新句子 */
+        /** 如果上一句话是完整的则新增语句 */
+        if (lastMsgCompleted) {
           state.msgHistory.push({
             value: payload.text,
             time: new Date().toString(),
@@ -271,6 +249,13 @@ export const roomSlice = createSlice({
             definite,
             paragraph,
           });
+        } else {
+          /** 话未说完, 更新文字内容 */
+          lastMsg.value = payload.text;
+          lastMsg.time = new Date().toString();
+          lastMsg.paragraph = paragraph;
+          lastMsg.definite = definite;
+          lastMsg.user = payload.user;
         }
       } else {
         /** 首句话首字不会被打断 */
