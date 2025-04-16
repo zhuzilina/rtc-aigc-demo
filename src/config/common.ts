@@ -24,6 +24,12 @@ export enum CustomParamsType {
   LLM = 'LLM',
 }
 
+export enum MODEL_MODE {
+  ORIGINAL = 'original',
+  VENDOR = 'vendor',
+  COZE = 'coze',
+}
+
 /**
  * @brief AI 音色可选值
  * @default 通用女声
@@ -328,4 +334,4 @@ export const Prompt = {
   [SCENE.CUSTOM]: '',
 };
 
-export const isVisionMode = (model: AI_MODEL) => model.startsWith('Vision');
+export const isVisionMode = (model?: AI_MODEL) => model?.startsWith('Vision');

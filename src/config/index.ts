@@ -8,7 +8,6 @@ import { ConfigFactory } from './config';
 export * from './common';
 
 export const AIGC_PROXY_HOST = 'http://localhost:3001/proxyAIGCFetch';
-export const DEMO_VERSION = '1.4.0';
 
 export const Config = ConfigFactory;
 export default new ConfigFactory();

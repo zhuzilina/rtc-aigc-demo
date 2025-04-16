@@ -10,7 +10,7 @@ import {
   NetworkQuality,
   RemoteAudioStats,
 } from '@volcengine/rtc';
-import config, { SCENE } from '@/config';
+import config, { MODEL_MODE, SCENE } from '@/config';
 
 export interface IUser {
   username?: string;
@@ -72,6 +72,10 @@ export interface RoomState {
    */
   aiConfig: ReturnType<any>;
   /**
+   * @brief 当前模型的类型
+   */
+  modelMode: MODEL_MODE;
+  /**
    * @brief 网络质量
    */
   networkQuality: NetworkQuality;
@@ -116,6 +120,7 @@ const initialState: RoomState = {
   networkQuality: NetworkQuality.UNKNOWN,
 
   aiConfig: config.aigcConfig,
+  modelMode: MODEL_MODE.ORIGINAL,
 
   msgHistory: [],
   currentConversation: {},
@@ -225,6 +230,9 @@ export const roomSlice = createSlice({
     updateAIConfig: (state, { payload }) => {
       state.aiConfig = Object.assign(state.aiConfig, payload);
     },
+    updateModelMode: (state, { payload }) => {
+      state.modelMode = payload;
+    },
     clearHistoryMsg: (state) => {
       state.msgHistory = [];
     },
@@ -307,6 +315,7 @@ export const {
   updateAITalkState,
   updateAIThinkState,
   updateAIConfig,
+  updateModelMode,
   setHistoryMsg,
   clearHistoryMsg,
   clearCurrentMsg,

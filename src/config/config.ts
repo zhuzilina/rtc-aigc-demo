@@ -7,13 +7,12 @@ import { StreamIndex } from '@volcengine/rtc';
 import {
   TTS_CLUSTER,
   ARK_V3_MODEL_ID,
-  ModelSourceType,
+  MODEL_MODE,
   SCENE,
   Prompt,
   Welcome,
   Model,
   Voice,
-  // LLM_BOT_ID,
   AI_MODEL,
   AI_MODE_MAP,
   AI_MODEL_MODE,
@@ -98,7 +97,11 @@ export class ConfigFactory {
    */
   WelcomeSpeech = Welcome[SCENE.INTELLIGENT_ASSISTANT];
 
-  ModeSourceType = ModelSourceType.Available;
+  /**
+   * @note 当前使用的模型来源, 具体可参考 MODEL_MODE 定义。
+   *       通过 UI 修改, 无须手动配置。
+   */
+  ModeSourceType = MODEL_MODE.ORIGINAL;
 
   /**
    * @note 非必填, 第三方模型才需要使用, 用火山方舟模型时无需关注。
@@ -117,6 +120,11 @@ export class ConfigFactory {
   BotName = 'RobotMan_';
 
   /**
+   * @note Coze 智能体 ID，可通过 UI 配置，也可以在此直接定义。
+   */
+  BotID = '';
+
+  /**
    * @brief 是否为打断模式
    */
   InterruptMode = true;
@@ -130,7 +138,6 @@ export class ConfigFactory {
     const params: Record<string, unknown> = {
       Mode: AI_MODE_MAP[this.Model || ''] || AI_MODEL_MODE.CUSTOM,
       EndPointId: ARK_V3_MODEL_ID[this.Model],
-      // BotId: LLM_BOT_ID[this.Model],
       MaxTokens: 1024,
       Temperature: 0.1,
       TopP: 0.3,
@@ -139,7 +146,6 @@ export class ConfigFactory {
       ModelName: this.Model,
       ModelVersion: '1.0',
       WelcomeSpeech: this.WelcomeSpeech,
-      ModeSourceType: this.ModeSourceType,
       APIKey: this.APIKey,
       Url: this.Url,
       Feature: JSON.stringify({ Http: true }),
@@ -151,6 +157,23 @@ export class ConfigFactory {
           StreamType: this.VisionSourceType,
           Height: 640,
           ImagesLimit: 1,
+        },
+      };
+    }
+    if (this.ModeSourceType === MODEL_MODE.COZE) {
+      /**
+       * @note Coze 智能体配置的相关参数, 可参考: https://www.volcengine.com/docs/6348/1404673?s=g#llmconfig%EF%BC%88coze%E5%B9%B3%E5%8F%B0%EF%BC%89
+       */
+      return {
+        Mode: 'CozeBot',
+        CozeBotConfig: {
+          Url: 'https://api.coze.cn',
+          BotID: this.BotID,
+          APIKey: this.APIKey,
+          UserId: this.BaseConfig.UserId,
+          HistoryLength: 10,
+          Prefill: false,
+          EnableConversation: false,
         },
       };
     }

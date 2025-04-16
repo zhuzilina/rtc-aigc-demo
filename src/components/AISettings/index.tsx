@@ -3,10 +3,10 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { Button, Drawer, Input, Message } from '@arco-design/web-react';
+import { Button, Drawer, Input, Message, Radio, Tooltip } from '@arco-design/web-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { IconSwap } from '@arco-design/web-react/icon';
+import { IconExclamationCircle } from '@arco-design/web-react/icon';
 import { StreamIndex } from '@volcengine/rtc';
 import CheckIcon from '../CheckIcon';
 import Config, {
@@ -18,7 +18,7 @@ import Config, {
   Voice,
   Model,
   AI_MODEL,
-  ModelSourceType,
+  MODEL_MODE,
   VOICE_INFO_MAP,
   VOICE_TYPE,
   isVisionMode,
@@ -26,7 +26,7 @@ import Config, {
 import TitleCard from '../TitleCard';
 import CheckBoxSelector from '@/components/CheckBoxSelector';
 import RtcClient from '@/lib/RtcClient';
-import { clearHistoryMsg, updateAIConfig, updateScene } from '@/store/slices/room';
+import { clearHistoryMsg, updateAIConfig, updateModelMode, updateScene } from '@/store/slices/room';
 import { RootState } from '@/store';
 import utils from '@/utils/utils';
 import { useDeviceState } from '@/lib/useCommon';
@@ -41,6 +41,8 @@ export interface IAISettingsProps {
   onOk?: () => void;
   onCancel?: () => void;
 }
+
+const RadioGroup = Radio.Group;
 
 const SCENES = [
   SCENE.INTELLIGENT_ASSISTANT,
@@ -59,17 +61,19 @@ function AISettings({ open, onCancel, onOk }: IAISettingsProps) {
     useDeviceState();
   const room = useSelector((state: RootState) => state.room);
   const [loading, setLoading] = useState(false);
-  const [use3Part, setUse3Part] = useState(false);
+  const [modelMode, setModelMode] = useState<MODEL_MODE>(room.modelMode);
   const [scene, setScene] = useState(room.scene);
   const [data, setData] = useState({
-    prompt: Prompt[scene],
-    welcome: Welcome[scene],
-    voice: Voice[scene],
-    model: Model[scene],
+    prompt: Config.Prompt || Prompt[scene],
+    welcome: Config.WelcomeSpeech || Welcome[scene],
+    voice: Config.VoiceType || Voice[scene],
+    model: Config.Model || Model[scene],
 
-    Url: '',
-    APIKey: '',
-    customModelName: '',
+    Url: Config.Url || '',
+    APIKey: Config.APIKey || '',
+    customModelName: (Config.Model || '') as string,
+
+    BotID: Config.BotID || '',
   });
 
   const handleVoiceTypeChanged = (key: string) => {
@@ -90,35 +94,55 @@ function AISettings({ open, onCancel, onOk }: IAISettingsProps) {
     }));
   };
 
-  const handleUseThirdPart = () => {
-    setUse3Part(!use3Part);
-    Config.ModeSourceType = use3Part ? ModelSourceType.Custom : ModelSourceType.Available;
+  const handleUseThirdPart = (val: MODEL_MODE) => {
+    setModelMode(val);
+    Config.ModeSourceType = val;
   };
 
   const handleUpdateConfig = async () => {
     dispatch(updateScene({ scene }));
-    if (use3Part) {
-      if (!data.Url) {
-        Message.error('请输入正确的第三方模型地址');
-        return;
-      }
-      if (!data.Url.startsWith('http://') && !data.Url.startsWith('https://')) {
-        Message.error('第三方模型请求地址格式不正确, 请以 http:// 或 https:// 为开头');
-        return;
-      }
-      Config.Url = data.Url;
-      Config.APIKey = data.APIKey;
-      Config.ModeSourceType = ModelSourceType.Custom;
-    } else {
-      Config.Url = undefined;
-      Config.APIKey = undefined;
-      Config.ModeSourceType = ModelSourceType.Available;
+    Config.ModeSourceType = modelMode;
+    switch (modelMode) {
+      case MODEL_MODE.ORIGINAL:
+        Config.Url = undefined;
+        Config.APIKey = undefined;
+        break;
+      case MODEL_MODE.COZE:
+        if (!data.APIKey) {
+          Message.error('访问令牌必填');
+          return;
+        }
+        if (!data.BotID) {
+          Message.error('智能体 ID 必填');
+          return;
+        }
+        Config.APIKey = data.APIKey;
+        Config.BotID = data.BotID;
+        break;
+      case MODEL_MODE.VENDOR:
+        if (!data.Url) {
+          Message.error('请输入正确的第三方模型地址');
+          return;
+        }
+        if (!data.Url.startsWith('http://') && !data.Url.startsWith('https://')) {
+          Message.error('第三方模型请求地址格式不正确, 请以 http:// 或 https:// 为开头');
+          return;
+        }
+        Config.Url = data.Url;
+        Config.APIKey = data.APIKey;
+        break;
+      default:
+        break;
     }
     setLoading(true);
-    Config.Model = use3Part ? (data.customModelName as AI_MODEL) : (data.model as AI_MODEL);
+    Config.Model =
+      modelMode === MODEL_MODE.VENDOR
+        ? (data.customModelName as AI_MODEL)
+        : (data.model as AI_MODEL);
     Config.Prompt = data.prompt;
     Config.VoiceType = data.voice;
     Config.WelcomeSpeech = data.welcome;
+    dispatch(updateModelMode(modelMode));
     dispatch(updateAIConfig(Config.aigcConfig));
 
     if (isVisionMode(data.model)) {
@@ -218,32 +242,85 @@ function AISettings({ open, onCancel, onOk }: IAISettingsProps) {
             }}
           />
         )}
-        <TitleCard title="Prompt">
-          <Input.TextArea
-            autoSize
-            value={data.prompt}
-            onChange={(val) => {
-              setData((prev) => ({
-                ...prev,
-                prompt: val,
-              }));
-            }}
-            placeholder="请输入你需要的 Prompt 设定"
-          />
-        </TitleCard>
-        <TitleCard title="欢迎语">
-          <Input.TextArea
-            autoSize
-            value={data.welcome}
-            onChange={(val) => {
-              setData((prev) => ({
-                ...prev,
-                welcome: val,
-              }));
-            }}
-            placeholder="请输入欢迎语"
-          />
-        </TitleCard>
+        <RadioGroup
+          options={[
+            {
+              value: MODEL_MODE.ORIGINAL,
+              label: '官方模型',
+            },
+            {
+              value: MODEL_MODE.COZE,
+              label: (
+                <div className={styles['radio-text']}>
+                  <span style={{ marginRight: '4px' }}>Coze</span>
+                  <Tooltip
+                    content={
+                      <div>
+                        访问令牌可参考{' '}
+                        <a
+                          href="https://www.coze.cn/open/docs/developer_guides/pat"
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: 'gray' }}
+                        >
+                          添加个人访问令牌
+                        </a>{' '}
+                        获取。
+                        <br />
+                        智能体 ID 可参考{' '}
+                        <a
+                          href="https://www.coze.cn/open/docs/developer_guides/coze_api_overview#c5ac4993"
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: 'gray' }}
+                        >
+                          发送请求
+                        </a>{' '}
+                        获取。
+                        <br />
+                        请注意智能体发布时须勾选 API 调用能力，否则无法成功对话。
+                      </div>
+                    }
+                  >
+                    <IconExclamationCircle />
+                  </Tooltip>
+                </div>
+              ),
+            },
+            {
+              value: MODEL_MODE.VENDOR,
+              label: (
+                <div className={styles['radio-text']}>
+                  <span style={{ marginRight: '4px' }}>第三方模型</span>
+                  <Tooltip
+                    content={
+                      <div>
+                        如第三方模型使用失败, 可前往{' '}
+                        <a
+                          href="https://www.volcengine.com/docs/6348/1399966"
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ color: 'gray' }}
+                        >
+                          第三方模型接口验证工具
+                        </a>{' '}
+                        下载工具定位原因。
+                      </div>
+                    }
+                  >
+                    <IconExclamationCircle />
+                  </Tooltip>
+                </div>
+              ),
+            },
+          ]}
+          value={modelMode}
+          size="mini"
+          type="button"
+          defaultValue="Beijing"
+          className={styles['ai-settings-radio']}
+          onChange={handleUseThirdPart}
+        />
         <div
           className={styles['ai-settings']}
           style={{
@@ -272,7 +349,29 @@ function AISettings({ open, onCancel, onOk }: IAISettingsProps) {
             </div>
           </TitleCard>
           <div className={styles['ai-settings-model']}>
-            {use3Part ? (
+            {modelMode === MODEL_MODE.ORIGINAL && (
+              <TitleCard title="官方模型">
+                <CheckBoxSelector
+                  label="模型选择"
+                  data={Object.keys(AI_MODEL).map((type) => ({
+                    key: AI_MODEL[type as keyof typeof AI_MODEL],
+                    label: type.replaceAll('_', ' '),
+                    icon: DoubaoModelSVG,
+                  }))}
+                  moreIcon={ModelChangeSVG}
+                  moreText="更换模型"
+                  placeHolder="请选择你需要的模型"
+                  onChange={(key) => {
+                    setData((prev) => ({
+                      ...prev,
+                      model: key as AI_MODEL,
+                    }));
+                  }}
+                  value={data.model}
+                />
+              </TitleCard>
+            )}
+            {modelMode === MODEL_MODE.VENDOR && (
               <>
                 <TitleCard required title="第三方模型地址">
                   <Input.TextArea
@@ -314,34 +413,68 @@ function AISettings({ open, onCancel, onOk }: IAISettingsProps) {
                   />
                 </TitleCard>
               </>
-            ) : (
-              <TitleCard title="官方模型">
-                <CheckBoxSelector
-                  label="模型选择"
-                  data={Object.keys(AI_MODEL).map((type) => ({
-                    key: AI_MODEL[type as keyof typeof AI_MODEL],
-                    label: type.replaceAll('_', ' '),
-                    icon: DoubaoModelSVG,
-                  }))}
-                  moreIcon={ModelChangeSVG}
-                  moreText="更换模型"
-                  placeHolder="请选择你需要的模型"
-                  onChange={(key) => {
-                    setData((prev) => ({
-                      ...prev,
-                      model: key as AI_MODEL,
-                    }));
-                  }}
-                  value={data.model}
-                />
-              </TitleCard>
             )}
-
-            <Button size="mini" type="text" onClick={handleUseThirdPart}>
-              {use3Part ? '使用官方模型' : '使用第三方模型'} <IconSwap />
-            </Button>
+            {modelMode === MODEL_MODE.COZE && (
+              <>
+                <TitleCard required title="请求地址">
+                  <Input.TextArea autoSize disabled value="https://api.coze.cn" />
+                </TitleCard>
+                <TitleCard required title="访问令牌">
+                  <Input.TextArea
+                    autoSize
+                    value={data.APIKey}
+                    onChange={(val) => {
+                      setData((prev) => ({
+                        ...prev,
+                        APIKey: val,
+                      }));
+                    }}
+                    placeholder="请输入访问令牌"
+                  />
+                </TitleCard>
+                <TitleCard required title="智能体 ID">
+                  <Input.TextArea
+                    autoSize
+                    value={data.BotID}
+                    onChange={(val) => {
+                      setData((prev) => ({
+                        ...prev,
+                        BotID: val,
+                      }));
+                    }}
+                    placeholder="请输入智能体 ID"
+                  />
+                </TitleCard>
+              </>
+            )}
           </div>
         </div>
+        <TitleCard title="系统 Prompt">
+          <Input.TextArea
+            autoSize
+            value={data.prompt}
+            onChange={(val) => {
+              setData((prev) => ({
+                ...prev,
+                prompt: val,
+              }));
+            }}
+            placeholder="请输入你需要的 Prompt 设定"
+          />
+        </TitleCard>
+        <TitleCard title="欢迎语">
+          <Input.TextArea
+            autoSize
+            value={data.welcome}
+            onChange={(val) => {
+              setData((prev) => ({
+                ...prev,
+                welcome: val,
+              }));
+            }}
+            placeholder="请输入欢迎语"
+          />
+        </TitleCard>
       </div>
     </Drawer>
   );

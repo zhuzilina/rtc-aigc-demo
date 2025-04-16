@@ -27,11 +27,6 @@ const ACCOUNT_INFO = {
    * @notes 必填, 在 https://console.volcengine.com/iam/keymanage/ 获取
    */
   secretKey: 'Your SK',
-  /**
-   * @notes 非必填, 主账号无须传入, 子账号须传, 获取方式可参考
-   * https://www.volcengine.com/docs/6348/1315561 中的 步骤 4-使用子账号调用智能体接口 一节
-   */
-  // sessionToken: 'Your SessionToken',
 }
 
 app.use(bodyParser());
@@ -67,9 +62,7 @@ app.use(async ctx => {
     /** 参考 https://www.volcengine.com/docs/6348/69828 可获取更多 OpenAPI 的信息 */
     const result = await fetch(`https://rtc.volcengineapi.com?Action=${Action}&Version=${Version}`, {
       method: 'POST',
-      headers: {
-        ...openApiRequestData.headers,
-      },
+      headers: openApiRequestData.headers,
       body: JSON.stringify(body),
     });
     const volcResponse = await result.json();
