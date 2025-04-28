@@ -87,7 +87,7 @@ export enum AI_MODEL {
   DOUBAO_PRO_32K = 'Doubao-pro-32k',
   DOUBAO_PRO_128K = 'Doubao-pro-128k',
   VISION = 'Vision',
-  // VISION2 = 'ArkVLM',
+  ARK_BOT = 'ArkBot',
 }
 
 /**
@@ -107,26 +107,30 @@ export const AI_MODE_MAP: Partial<Record<AI_MODEL, AI_MODEL_MODE>> = {
   [AI_MODEL.DOUBAO_PRO_32K]: AI_MODEL_MODE.ARK_V3,
   [AI_MODEL.DOUBAO_PRO_128K]: AI_MODEL_MODE.ARK_V3,
   [AI_MODEL.VISION]: AI_MODEL_MODE.ARK_V3,
+  [AI_MODEL.ARK_BOT]: AI_MODEL_MODE.ARK_V3,
 };
 
 /**
- * @brief 豆包模型的 ID
+ * @brief 方舟模型的 ID
  * @note 具体的模型 ID 请至 https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint?config=%7B%7D&s=g 参看/创建
  *       模型 ID 即接入点 ID, 在上述链接中表格内 "接入点名称" 列中, 类似于 "ep-2024xxxxxx-xxx" 格式即是模型 ID。
  */
 export const ARK_V3_MODEL_ID: Partial<Record<AI_MODEL, string>> = {
-  [AI_MODEL.DOUBAO_LITE_4K]: '**************   此处填充方舟上的模型 ID *************',
-  [AI_MODEL.DOUBAO_PRO_4K]: '**************   此处填充方舟上的模型 ID *************',
-  [AI_MODEL.DOUBAO_PRO_32K]: '**************   此处填充方舟上的模型 ID *************',
-  [AI_MODEL.DOUBAO_PRO_128K]: '**************   此处填充方舟上的模型 ID *************',
-  [AI_MODEL.VISION]: '**************   此处填充方舟上的模型 ID *************',
+  [AI_MODEL.DOUBAO_LITE_4K]: '************** 此处填充方舟上的模型 ID *************',
+  [AI_MODEL.DOUBAO_PRO_4K]: '************** 此处填充方舟上的模型 ID *************',
+  [AI_MODEL.DOUBAO_PRO_32K]: '************** 此处填充方舟上的模型 ID *************',
+  [AI_MODEL.DOUBAO_PRO_128K]: '************** 此处填充方舟上的模型 ID *************',
+  [AI_MODEL.VISION]: '************** 此处填充方舟上的模型 ID *************',
   // ... 可根据所开通的模型进行扩充
 };
 
 /**
- * @brief 豆包智能体 BotID
+ * @brief 方舟智能体 BotID
+ * @note 具体的智能体 ID 请至 https://console.volcengine.com/ark/region:ark+cn-beijing/assistant?s=g 参看/创建
+ *       Bot ID 即页面上的应用 ID, 类似于 "bot-2025xxxxxx-xxx" 格式即是应用 ID。
  */
 export const LLM_BOT_ID: Partial<Record<AI_MODEL, string>> = {
+  [AI_MODEL.ARK_BOT]: '************** 此处填充方舟上的 Bot ID *************',
   // ... 可根据所开通的模型进行扩充
 };
 

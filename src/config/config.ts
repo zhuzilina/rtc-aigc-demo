@@ -16,6 +16,7 @@ import {
   AI_MODEL,
   AI_MODE_MAP,
   AI_MODEL_MODE,
+  LLM_BOT_ID,
   isVisionMode,
 } from '.';
 
@@ -137,7 +138,12 @@ export class ConfigFactory {
   get LLMConfig() {
     const params: Record<string, unknown> = {
       Mode: AI_MODE_MAP[this.Model || ''] || AI_MODEL_MODE.CUSTOM,
+      /**
+       * @note EndPointId 与 BotId 不可同时填写，若同时填写，则 EndPointId 生效。
+       *       当前仅支持自定义推理接入点，不支持预置推理接入点。
+       */
       EndPointId: ARK_V3_MODEL_ID[this.Model],
+      BotId: LLM_BOT_ID[this.Model],
       MaxTokens: 1024,
       Temperature: 0.1,
       TopP: 0.3,
@@ -150,6 +156,37 @@ export class ConfigFactory {
       Url: this.Url,
       Feature: JSON.stringify({ Http: true }),
     };
+    if (LLM_BOT_ID[this.Model]) {
+      /**
+       * @note 如果您配置了方舟智能体, 并且开启了 Function Call 能力, 需要传入 Tools 字段, 描述函数相关信息。
+       *       相关配置可查看 https://www.volcengine.com/docs/6348/1404673?s=g#llmconfig%EF%BC%88%E7%81%AB%E5%B1%B1%E6%96%B9%E8%88%9F%E5%B9%B3%E5%8F%B0%EF%BC%89
+       *       对应的调用定义于 src/utils/handler.ts 文件中, 可参考对应逻辑。
+       */
+      params.Tools = [
+        {
+          type: 'function',
+          function: {
+            name: 'get_current_weather',
+            description: '获取给定地点的天气',
+            parameters: {
+              type: 'object',
+              properties: {
+                location: {
+                  type: 'string',
+                  description: '地理位置，比如北京市',
+                },
+                unit: {
+                  type: 'string',
+                  description: '',
+                  enum: ['摄氏度', '华氏度'],
+                },
+              },
+              required: ['location'],
+            },
+          },
+        },
+      ];
+    }
     if (isVisionMode(this.Model)) {
       params.VisionConfig = {
         Enable: true,

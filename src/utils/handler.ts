@@ -19,7 +19,7 @@ export type AnyRecord = Record<string, any>;
 export enum MESSAGE_TYPE {
   BRIEF = 'conv',
   SUBTITLE = 'subv',
-  FUNCTION_CALL = 'func',
+  FUNCTION_CALL = 'tool',
 }
 
 export enum AGENT_BRIEF {
@@ -134,8 +134,6 @@ export const useMessageHandler = () => {
       console.log('[Function Call] - Called by sendUserBinaryMessage');
       const map: Record<string, string> = {
         getcurrentweather: '今天下雪， 最低气温零下10度',
-        musicplayer: '查询到李四的歌曲， 名称是千里之内',
-        sendmessage: '发送成功',
       };
 
       RtcClient.engine.sendUserBinaryMessage(
