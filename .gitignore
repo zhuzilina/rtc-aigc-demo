@@ -26,3 +26,4 @@ yarn-error.log*
 /Server/node_modules
 /Server/log
 /log
+yarn.lock

@@ -63,6 +63,9 @@ export class ConfigFactory {
     /**
      * @brief 已开通需要的语音合成服务的token。
      *        使用火山引擎双向流式语音合成服务时 必填。
+     * 
+     * @note  注意! 如您使用的是双向流式语音合成服务, 务必修改 `src/config/common.ts` 中的 VOICE_TYPE enum，将默认的 通用女声、通用男声 替换为您已开通的大模型音色。
+     *        否则可能出现无法使用的情况。
      */
     TTSToken: undefined,
     /**

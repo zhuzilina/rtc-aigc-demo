@@ -65,6 +65,12 @@ yarn dev
 参考 [OpenAPI 更新](https://www.volcengine.com/docs/6348/116363?s=g) 中与 实时对话式 AI 相关的更新内容。
 
 ### Demo 更新
+
+#### [1.6.0] - [2025-05-22]
+- 更新 RTC Web SDK 版本至 4.66.13
+- 删除无用依赖
+- 更新 Readme 文档
+
 #### [1.6.0] - [2025-04-16]
 - 支持 Coze Bot
 - 更新部分注释和文档内容
