@@ -3,19 +3,34 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { Modal } from '@arco-design/web-react';
+import { Message } from '@arco-design/web-react';
 import { AIGC_PROXY_HOST } from '@/config';
+import type { RequestResponse, ApiConfig, ApiNames, Apis } from './type';
 
 type Headers = Record<string, string>;
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends Array<infer U>
+    ? Array<DeepPartial<U>>
+    : T[P] extends object
+    ? DeepPartial<T[P]>
+    : T[P];
+};
 
 /**
  * @brief Get
  * @param apiName
  * @param headers
  */
-export const requestGetMethod = (apiBasicParams: string, headers = {}) => {
+export const requestGetMethod = ({
+  action,
+  headers = {},
+}: {
+  action: string;
+  headers?: Record<string, string>;
+}) => {
   return async (params: Record<string, any> = {}) => {
-    const url = `${AIGC_PROXY_HOST}${apiBasicParams}&${Object.keys(params)
+    const url = `${AIGC_PROXY_HOST}?Action=${action}&${Object.keys(params)
       .map((key) => `${key}=${params[key]}`)
       .join('&')}`;
     const res = await fetch(url, {
@@ -29,17 +44,20 @@ export const requestGetMethod = (apiBasicParams: string, headers = {}) => {
 
 /**
  * @brief Post
- * @param apiName
- * @param isJson
- * @param headers
  */
-export const requestPostMethod = (
-  apiBasicParams: string,
-  isJson: boolean = true,
-  headers: Headers = {}
-) => {
+export const requestPostMethod = ({
+  action,
+  apiPath,
+  isJson = true,
+  headers = {},
+}: {
+  action: string;
+  apiPath: string;
+  isJson?: boolean;
+  headers?: Headers;
+}) => {
   return async <T>(params: T) => {
-    const res = await fetch(`${AIGC_PROXY_HOST}${apiBasicParams}`, {
+    const res = await fetch(`${AIGC_PROXY_HOST}${apiPath}?Action=${action}`, {
       method: 'post',
       headers: {
         'content-type': 'application/json',
@@ -52,17 +70,43 @@ export const requestPostMethod = (
 };
 
 /**
- * @brief Handler
+ * @brief Return handler
  * @param res
  */
-export const resultHandler = (res: any) => {
+export const resultHandler = (res: RequestResponse) => {
   const { Result, ResponseMetadata } = res || {};
-  if (Result === 'ok') {
-    return Result;
+  // Record request id for debug.
+  if (ResponseMetadata.Action === 'StartVoiceChat') {
+    const requestId = ResponseMetadata.RequestId;
+    requestId && sessionStorage.setItem('RequestID', requestId);
   }
-  const error = ResponseMetadata?.Error?.Message || Result;
-  Modal.error({
-    title: '接口调用错误',
-    content: `[${ResponseMetadata?.Action}]Failed(Reason: ${error}), 请参考 README 文档排查问题。`,
-  });
+  if (ResponseMetadata.Error) {
+    Message.error(
+      `[${ResponseMetadata?.Action}]call failed(reason: ${ResponseMetadata.Error?.Message})`
+    );
+    throw new Error(
+      `[${ResponseMetadata?.Action}]call failed(${JSON.stringify(ResponseMetadata, null, 2)})`
+    );
+  }
+  return Result;
 };
+
+/**
+ * @brief Generate APIs by apiConfigs
+ * @param apiConfigs
+ */
+export const generateAPIs = <T extends readonly ApiConfig[]>(apiConfigs: T) =>
+  apiConfigs.reduce<Apis<T>>((store, cur) => {
+    const { action, apiPath = '', method = 'get' } = cur;
+
+    const actionKey = action as ApiNames<T>;
+    store[actionKey] = async (params) => {
+      const queryData =
+        method === 'get'
+          ? await requestGetMethod({ action })(params)
+          : await requestPostMethod({ action, apiPath })(params);
+      const res = await queryData?.json();
+      return resultHandler(res);
+    };
+    return store;
+  }, {} as Apis<T>);

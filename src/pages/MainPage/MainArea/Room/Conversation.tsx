@@ -8,16 +8,19 @@ import { useSelector } from 'react-redux';
 import { Tag, Spin } from '@arco-design/web-react';
 import { RootState } from '@/store';
 import Loading from '@/components/Loading/HorizonLoading';
-import Config from '@/config';
+import { Configuration, SceneMap } from '@/config';
+import USER_AVATAR from '@/assets/img/userAvatar.png';
 import styles from './index.module.less';
+import { isMobile } from '@/utils/utils';
 
 const lines: (string | React.ReactNode)[] = [];
 
 function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className, ...rest } = props;
-  const msgHistory = useSelector((state: RootState) => state.room.msgHistory);
+  const room = useSelector((state: RootState) => state.room);
+  const { msgHistory, isFullScreen } = room;
   const { userId } = useSelector((state: RootState) => state.room.localUser);
-  const { isAITalking, isUserTalking } = useSelector((state: RootState) => state.room);
+  const { isAITalking, isUserTalking, scene } = useSelector((state: RootState) => state.room);
   const isAIReady = msgHistory.length > 0;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -26,7 +29,7 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
   };
 
   const isAITextLoading = (owner: string) => {
-    return owner === Config.BotName && isAITalking;
+    return owner === Configuration.BotName && isAITalking;
   };
 
   useEffect(() => {
@@ -37,7 +40,13 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
   }, [msgHistory.length]);
 
   return (
-    <div ref={containerRef} className={`${styles.conversation} ${className}`} {...rest}>
+    <div
+      ref={containerRef}
+      className={`${styles.conversation} ${className} ${isFullScreen ? styles.fullScreen : ''} ${
+        isMobile() ? styles.mobileConversation : ''
+      }`}
+      {...rest}
+    >
       {lines.map((line) => line)}
       {!isAIReady ? (
         <div className={styles.aiReadying}>
@@ -49,28 +58,42 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
       )}
       {msgHistory?.map(({ value, user, isInterrupted }, index) => {
         const isUserMsg = user === userId;
-        const isRobotMsg = user === Config.BotName;
+        const isRobotMsg = user === Configuration.BotName;
         if (!isUserMsg && !isRobotMsg) {
           return '';
         }
         return (
           <div
-            className={`${styles.sentence} ${isUserMsg ? styles.user : styles.robot}`}
-            key={`msg-${index}`}
+            key={`msg-container-${index}`}
+            className={styles.mobileLine}
+            style={{ justifyContent: isUserMsg && isMobile() ? 'flex-end' : '' }}
           >
-            <div className={styles.content}>
-              {value}
-              <div className={styles['loading-wrapper']}>
-                {isAIReady &&
-                (isUserTextLoading(user) || isAITextLoading(user)) &&
-                index === msgHistory.length - 1 ? (
-                  <Loading gap={3} className={styles.loading} dotClassName={styles.dot} />
-                ) : (
-                  ''
-                )}
+            {!isMobile() && (
+              <div className={styles.msgName}>
+                <div className={styles.avatar}>
+                  <img src={isUserMsg ? USER_AVATAR : SceneMap[scene].icon} alt="Avatar" />
+                </div>
+                {isUserMsg ? '我' : scene}
               </div>
+            )}
+            <div
+              className={`${styles.sentence} ${isUserMsg ? styles.user : styles.robot}`}
+              key={`msg-${index}`}
+            >
+              <div className={styles.content}>
+                {value}
+                <div className={styles['loading-wrapper']}>
+                  {isAIReady &&
+                  (isUserTextLoading(user) || isAITextLoading(user)) &&
+                  index === msgHistory.length - 1 ? (
+                    <Loading gap={3} className={styles.loading} dotClassName={styles.dot} />
+                  ) : (
+                    ''
+                  )}
+                </div>
+              </div>
+              {!isUserMsg && isInterrupted ? <Tag className={styles.interruptTag}>已打断</Tag> : ''}
             </div>
-            {!isUserMsg && isInterrupted ? <Tag className={styles.interruptTag}>已打断</Tag> : ''}
           </div>
         );
       })}

@@ -26,9 +26,9 @@ import VERTC, {
 } from '@volcengine/rtc';
 import RTCAIAnsExtension from '@volcengine/rtc/extension-ainr';
 import { Message } from '@arco-design/web-react';
-import openAPIs from '@/app/api';
-import aigcConfig from '@/config';
-import Utils from '@/utils/utils';
+import Apis from '@/app/index';
+import { Configuration, SceneMap } from '@/config';
+import { string2tlv } from '@/utils/utils';
 import { COMMAND, INTERRUPT_PRIORITY } from '@/utils/handler';
 
 export interface IEventListener {
@@ -49,8 +49,6 @@ export interface IEventListener {
   handleAudioDeviceStateChanged: (e: DeviceInfo) => void;
   handleAutoPlayFail: (e: AutoPlayFailedEvent) => void;
   handlePlayerEvent: (e: PlayerEvent) => void;
-  handleUserStartAudioCapture: (e: { userId: string }) => void;
-  handleUserStopAudioCapture: (e: { userId: string }) => void;
   handleRoomBinaryMessageReceived: (e: { userId: string; message: ArrayBuffer }) => void;
   handleNetworkQuality: (
     uplinkNetworkQuality: NetworkQuality,
@@ -65,9 +63,9 @@ interface EngineOptions {
 }
 
 export interface BasicBody {
+  app_id: string;
   room_id: string;
   user_id: string;
-  login_token: string | null;
 }
 
 /**
@@ -76,8 +74,6 @@ export interface BasicBody {
  */
 export class RTCClient {
   engine!: IRTCEngine;
-
-  config!: EngineOptions;
 
   basicInfo!: BasicBody;
 
@@ -90,14 +86,13 @@ export class RTCClient {
   audioBotStartTime = 0;
 
   createEngine = async (props: EngineOptions) => {
-    this.config = props;
     this.basicInfo = {
+      app_id: props.appId,
       room_id: props.roomId,
       user_id: props.uid,
-      login_token: aigcConfig.BaseConfig.Token,
     };
 
-    this.engine = VERTC.createEngine(this.config.appId);
+    this.engine = VERTC.createEngine(this.basicInfo.app_id);
     try {
       const AIAnsExtension = new RTCAIAnsExtension();
       await this.engine.registerExtension(AIAnsExtension);
@@ -123,8 +118,6 @@ export class RTCClient {
     handleAudioDeviceStateChanged,
     handleAutoPlayFail,
     handlePlayerEvent,
-    handleUserStartAudioCapture,
-    handleUserStopAudioCapture,
     handleRoomBinaryMessageReceived,
     handleNetworkQuality,
   }: IEventListener) => {
@@ -141,8 +134,6 @@ export class RTCClient {
     this.engine.on(VERTC.events.onRemoteAudioPropertiesReport, handleRemoteAudioPropertiesReport);
     this.engine.on(VERTC.events.onAutoplayFailed, handleAutoPlayFail);
     this.engine.on(VERTC.events.onPlayerEvent, handlePlayerEvent);
-    this.engine.on(VERTC.events.onUserStartAudioCapture, handleUserStartAudioCapture);
-    this.engine.on(VERTC.events.onUserStopAudioCapture, handleUserStopAudioCapture);
     this.engine.on(VERTC.events.onRoomBinaryMessageReceived, handleRoomBinaryMessageReceived);
     this.engine.on(VERTC.events.onNetworkQuality, handleNetworkQuality);
   };
@@ -151,13 +142,13 @@ export class RTCClient {
     this.engine.enableAudioPropertiesReport({ interval: 1000 });
     return this.engine.joinRoom(
       token,
-      `${this.config.roomId!}`,
+      `${this.basicInfo.room_id!}`,
       {
-        userId: this.config.uid!,
+        userId: this.basicInfo.user_id!,
         extraInfo: JSON.stringify({
           call_scene: 'RTC-AIGC',
           user_name: username,
-          user_id: this.config.uid,
+          user_id: this.basicInfo.user_id,
         }),
       },
       {
@@ -169,7 +160,7 @@ export class RTCClient {
   };
 
   leaveRoom = () => {
-    this.stopAudioBot();
+    this.stopAgent();
     this.audioBotEnabled = false;
     this.engine.leaveRoom();
     VERTC.destroyEngine(this.engine);
@@ -334,56 +325,75 @@ export class RTCClient {
   setLocalVideoPlayer = (
     userId: string,
     renderDom?: string | HTMLElement,
-    isScreenShare = false
+    isScreenShare = false,
+    renderMode = VideoRenderMode.RENDER_MODE_FILL
   ) => {
     return this.engine.setLocalVideoPlayer(
       isScreenShare ? StreamIndex.STREAM_INDEX_SCREEN : StreamIndex.STREAM_INDEX_MAIN,
       {
         renderDom,
         userId,
-        renderMode: VideoRenderMode.RENDER_MODE_FILL,
+        renderMode,
       }
     );
   };
 
   /**
+   * @brief 移除播放器
+   */
+  removeVideoPlayer = (userId: string, scope: StreamIndex | 'Both' = 'Both') => {
+    let removeScreen = scope === StreamIndex.STREAM_INDEX_SCREEN;
+    let removeCamera = scope === StreamIndex.STREAM_INDEX_MAIN;
+    if (scope === 'Both') {
+      removeCamera = true;
+      removeScreen = true;
+    }
+    if (removeScreen) {
+      this.engine.setLocalVideoPlayer(StreamIndex.STREAM_INDEX_SCREEN, { userId });
+    }
+    if (removeCamera) {
+      this.engine.setLocalVideoPlayer(StreamIndex.STREAM_INDEX_MAIN, { userId });
+    }
+  };
+
+  /**
    * @brief 启用 AIGC
    */
-  startAudioBot = async () => {
+  startAgent = async (scene: string) => {
     const roomId = this.basicInfo.room_id;
     const userId = this.basicInfo.user_id;
     if (this.audioBotEnabled) {
-      await this.stopAudioBot();
+      await this.stopAgent();
     }
-    const agentConfig = aigcConfig.aigcConfig.AgentConfig;
+    const params = SceneMap[scene];
+
+    params.agentConfig.UserId = Configuration.BotName;
+    params.agentConfig.TargetUserId = [userId];
 
     const options = {
-      AppId: aigcConfig.BaseConfig.AppId,
-      BusinessId: aigcConfig.BaseConfig.BusinessId,
       RoomId: roomId,
       TaskId: userId,
-      AgentConfig: {
-        ...agentConfig,
-        TargetUserId: [userId],
+      AgentConfig: params.agentConfig,
+      Config: {
+        LLMConfig: params.llmConfig,
+        ASRConfig: params.asrConfig,
+        TTSConfig: params.ttsConfig,
       },
-      Config: aigcConfig.aigcConfig.Config,
     };
-    await openAPIs.StartVoiceChat(options);
+    await Apis.VoiceChat.StartVoiceChat(options);
     this.audioBotEnabled = true;
     this.audioBotStartTime = Date.now();
-    Utils.setSessionInfo({ audioBotEnabled: 'enable' });
   };
 
   /**
    * @brief 关闭 AIGC
    */
-  stopAudioBot = async () => {
+  stopAgent = async () => {
     const roomId = this.basicInfo.room_id;
     const userId = this.basicInfo.user_id;
     if (this.audioBotEnabled || sessionStorage.getItem('audioBotEnabled')) {
-      await openAPIs.StopVoiceChat({
-        AppId: aigcConfig.BaseConfig.AppId,
-        BusinessId: aigcConfig.BaseConfig.BusinessId,
+      await Apis.VoiceChat.StopVoiceChat({
+        AppId: this.basicInfo.app_id,
         RoomId: roomId,
         TaskId: userId,
       });
@@ -396,11 +406,11 @@ export class RTCClient {
   /**
    * @brief 命令 AIGC
    */
-  commandAudioBot = (command: COMMAND, interruptMode = INTERRUPT_PRIORITY.NONE, message = '') => {
+  commandAgent = (command: COMMAND, interruptMode = INTERRUPT_PRIORITY.NONE, message = '') => {
     if (this.audioBotEnabled) {
       this.engine.sendUserBinaryMessage(
-        aigcConfig.BotName,
-        Utils.string2tlv(
+        Configuration.BotName,
+        string2tlv(
           JSON.stringify({
             Command: command,
             InterruptMode: interruptMode,
@@ -417,19 +427,19 @@ export class RTCClient {
   /**
    * @brief 更新 AIGC 配置
    */
-  updateAudioBot = async () => {
+  updateAgent = async (scene: string) => {
     if (this.audioBotEnabled) {
-      await this.stopAudioBot();
-      await this.startAudioBot();
+      await this.stopAgent();
+      await this.startAgent(scene);
     } else {
-      await this.startAudioBot();
+      await this.startAgent(scene);
     }
   };
 
   /**
    * @brief 获取当前 AI 是否启用
    */
-  getAudioBotEnabled = () => {
+  getAgentEnabled = () => {
     return this.audioBotEnabled;
   };
 }

@@ -4,7 +4,6 @@
  */
 
 import { ReactNode } from 'react';
-// import { Button } from '@arco-design/web-react';
 import CheckedSVG from '@/assets/img/Checked.svg';
 import styles from './index.module.less';
 

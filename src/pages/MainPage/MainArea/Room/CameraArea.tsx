@@ -4,13 +4,17 @@
  */
 
 import { useSelector } from 'react-redux';
+import { VideoRenderMode } from '@volcengine/rtc';
 import { useEffect } from 'react';
 import { RootState } from '@/store';
 import { useDeviceState, useVisionMode } from '@/lib/useCommon';
 import RtcClient from '@/lib/RtcClient';
-import { ScreenShareScene } from '@/config';
 
 import styles from './index.module.less';
+import UserTag from '@/components/UserTag';
+import LocalPlayerSet from '@/components/LocalPlayerSet';
+import AiAvatarCard from '@/components/AiAvatarCard';
+import UserAvatar from '@/assets/img/userAvatar.png';
 import CameraCloseNoteSVG from '@/assets/img/CameraCloseNote.svg';
 import ScreenCloseNoteSVG from '@/assets/img/ScreenCloseNote.svg';
 
@@ -20,17 +24,19 @@ const LocalScreenID = 'local-screen-player';
 function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className, ...rest } = props;
   const room = useSelector((state: RootState) => state.room);
-  const { isVisionMode } = useVisionMode();
-  const isScreenMode = ScreenShareScene.includes(room.scene);
+  const { isFullScreen, scene } = room;
+  const { isVisionMode, isScreenMode } = useVisionMode();
   const { isVideoPublished, isScreenPublished, switchCamera, switchScreenCapture } =
     useDeviceState();
 
   const setVideoPlayer = () => {
-    if (isVisionMode && (isVideoPublished || isScreenPublished)) {
+    RtcClient.removeVideoPlayer(room.localUser.username!);
+    if (isVideoPublished || isScreenPublished) {
       RtcClient.setLocalVideoPlayer(
         room.localUser.username!,
-        isScreenMode ? LocalScreenID : LocalVideoID,
-        isScreenPublished
+        isFullScreen ? 'local-full-player' : isScreenMode ? LocalScreenID : LocalVideoID,
+        isScreenPublished,
+        isScreenMode ? VideoRenderMode.RENDER_MODE_FILL : VideoRenderMode.RENDER_MODE_HIDDEN
       );
     }
   };
@@ -45,10 +51,15 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
 
   useEffect(() => {
     setVideoPlayer();
-  }, [isVideoPublished, isScreenPublished, isScreenMode]);
+  }, [isVideoPublished, isScreenPublished, isScreenMode, isFullScreen, isVisionMode]);
 
-  return isVisionMode ? (
+  return (
     <div className={`${styles['camera-wrapper']} ${className}`} {...rest}>
+      <UserTag name={isFullScreen ? scene : '我'} className={styles.userTag} />
+      {isFullScreen ? (
+        <AiAvatarCard showUserTag={false} showStatus className={styles.fullScreenAiAvatar} />
+      ) : null}
+      {isVideoPublished || isScreenPublished ? <LocalPlayerSet /> : null}
       <div
         id={LocalVideoID}
         className={`${styles['camera-player']} ${
@@ -67,26 +78,35 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
         }`}
       >
         <img
-          src={isScreenMode ? ScreenCloseNoteSVG : CameraCloseNoteSVG}
+          src={isScreenMode ? ScreenCloseNoteSVG : isVisionMode ? CameraCloseNoteSVG : UserAvatar}
           alt="close"
           className={styles['camera-placeholder-close-note']}
         />
-        <div>
-          请
-          {isScreenMode ? (
-            <span onClick={handleOperateScreenShare} className={styles['camera-open-btn']}>
-              打开屏幕采集
-            </span>
-          ) : (
-            <span onClick={handleOperateCamera} className={styles['camera-open-btn']}>
-              打开摄像头
-            </span>
-          )}
-        </div>
-        <div>体验豆包视觉理解模型</div>
+
+        {isFullScreen ? null : (
+          <div>
+            {isScreenMode ? (
+              <>
+                打开
+                <span onClick={handleOperateScreenShare} className={styles['camera-open-btn']}>
+                  屏幕共享
+                </span>
+                <div>体验豆包视觉理解模型</div>
+              </>
+            ) : isVisionMode ? (
+              <>
+                打开
+                <span onClick={handleOperateCamera} className={styles['camera-open-btn']}>
+                  摄像头
+                </span>
+                <div>体验豆包视觉理解模型</div>
+              </>
+            ) : null}
+          </div>
+        )}
       </div>
     </div>
-  ) : null;
+  );
 }
 
 export default CameraArea;

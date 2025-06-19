@@ -10,9 +10,9 @@ import { Switch, Select } from '@arco-design/web-react';
 import DrawerRowItem from '@/components/DrawerRowItem';
 import { RootState } from '@/store';
 import RtcClient from '@/lib/RtcClient';
-import { useDeviceState } from '@/lib/useCommon';
+import { useDeviceState, useVisionMode } from '@/lib/useCommon';
 import { updateSelectedDevice } from '@/store/slices/device';
-import utils from '@/utils/utils';
+import { isMobile } from '@/utils/utils';
 import styles from './index.module.less';
 
 interface IDeviceDrawerButtonProps {
@@ -34,6 +34,14 @@ function DeviceDrawerButton(props: IDeviceDrawerButtonProps) {
   const selectedDevice =
     type === MediaType.AUDIO ? devices.selectedMicrophone : devices.selectedCamera;
   const permission = devicePermissions?.[type === MediaType.AUDIO ? 'audio' : 'video'];
+  const { isScreenMode } = useVisionMode();
+  const isScreenEnable = device.isScreenPublished;
+  const changeScreenPublished = device.switchScreenCapture;
+
+  const SETTING_NAME = {
+    [MediaType.AUDIO]: '麦克风',
+    [MediaType.VIDEO]: isScreenMode ? '屏幕共享' : '视频',
+  };
 
   const dispatch = useDispatch();
   const deviceList = useMemo(
@@ -61,30 +69,46 @@ function DeviceDrawerButton(props: IDeviceDrawerButtonProps) {
 
   return (
     <DrawerRowItem
-      btnText={`${DEVICE_NAME[type]}设置`}
+      btnText={`${SETTING_NAME[type]}设置`}
       drawer={{
-        width: utils.isMobile() ? '100%' : undefined,
-        title: `${DEVICE_NAME[type]}设置`,
-        footer: false,
+        width: isMobile() ? '100%' : undefined,
+        title: `${SETTING_NAME[type]}设置`,
+        footer: null,
         children: (
-          <div className={styles.wrapper}>
-            <div className={styles.label}>{DEVICE_NAME[type]}</div>
-            <div className={styles.value}>
-              <Switch
-                checked={isEnable}
-                size="small"
-                onChange={(enable) => switcher(enable)}
-                disabled={!permission}
-              />
-              <Select style={{ width: 250 }} value={selectedDevice} onChange={handleDeviceChange}>
-                {deviceList.map((device) => (
-                  <Select.Option key={device.deviceId} value={device.deviceId}>
-                    {device.label}
-                  </Select.Option>
-                ))}
-              </Select>
-            </div>
-          </div>
+          <>
+            {!isScreenMode && (
+              <div className={styles.wrapper}>
+                <div className={styles.label}>{DEVICE_NAME[type]}</div>
+                <div className={styles.value}>
+                  <Switch
+                    checked={isEnable}
+                    size="small"
+                    onChange={(enable) => switcher(enable)}
+                    disabled={!permission}
+                  />
+                  <Select
+                    style={{ width: 250 }}
+                    value={selectedDevice}
+                    onChange={handleDeviceChange}
+                  >
+                    {deviceList.map((device) => (
+                      <Select.Option key={device.deviceId} value={device.deviceId}>
+                        {device.label}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                </div>
+              </div>
+            )}
+            {type === MediaType.VIDEO && isScreenMode && (
+              <div className={styles.wrapper}>
+                <div className={styles.label}>屏幕共享</div>
+                <div className={styles.value}>
+                  <Switch checked={isScreenEnable} size="small" onChange={changeScreenPublished} />
+                </div>
+              </div>
+            )}
+          </>
         ),
       }}
     />

@@ -10,7 +10,7 @@ import {
   NetworkQuality,
   RemoteAudioStats,
 } from '@volcengine/rtc';
-import config, { MODEL_MODE, SCENE } from '@/config';
+import { Configuration, Scenes } from '@/config';
 
 export interface IUser {
   username?: string;
@@ -49,7 +49,7 @@ export interface RoomState {
   /**
    * @brief 选择的模式
    */
-  scene: SCENE;
+  scene: string;
 
   /**
    * @brief AI 通话是否启用
@@ -67,14 +67,6 @@ export interface RoomState {
    * @brief 用户是否正在说话
    */
   isUserTalking: boolean;
-  /**
-   * @brief AI 基础配置
-   */
-  aiConfig: ReturnType<any>;
-  /**
-   * @brief 当前模型的类型
-   */
-  modelMode: MODEL_MODE;
   /**
    * @brief 网络质量
    */
@@ -100,11 +92,26 @@ export interface RoomState {
       definite: boolean;
     };
   };
+
+  /**
+   * @brief 是否显示字幕
+   */
+  isShowSubtitle: boolean;
+
+  /**
+   * @brief 是否全屏
+   */
+  isFullScreen: boolean;
+
+  /**
+   * @brief 自定义人设名称
+   */
+  customSceneName: string;
 }
 
 const initialState: RoomState = {
   time: -1,
-  scene: SCENE.INTELLIGENT_ASSISTANT,
+  scene: Scenes[0].name,
   remoteUsers: [],
   localUser: {
     publishAudio: false,
@@ -119,11 +126,11 @@ const initialState: RoomState = {
   isUserTalking: false,
   networkQuality: NetworkQuality.UNKNOWN,
 
-  aiConfig: config.aigcConfig,
-  modelMode: MODEL_MODE.ORIGINAL,
-
   msgHistory: [],
   currentConversation: {},
+  isShowSubtitle: true,
+  isFullScreen: false,
+  customSceneName: '',
 };
 
 export const roomSlice = createSlice({
@@ -227,12 +234,6 @@ export const roomSlice = createSlice({
       state.isAIThinking = payload.isAIThinking;
       state.isUserTalking = false;
     },
-    updateAIConfig: (state, { payload }) => {
-      state.aiConfig = Object.assign(state.aiConfig, payload);
-    },
-    updateModelMode: (state, { payload }) => {
-      state.modelMode = payload;
-    },
     clearHistoryMsg: (state) => {
       state.msgHistory = [];
     },
@@ -240,7 +241,7 @@ export const roomSlice = createSlice({
       const { paragraph, definite } = payload;
       const lastMsg = state.msgHistory.at(-1)! || {};
       /** 是否需要再创建新句子 */
-      const fromBot = payload.user === config.BotName;
+      const fromBot = payload.user === Configuration.BotName;
       /**
        * Bot 的语句以 definite 判断是否需要追加新内容
        * User 的语句以 paragraph 判断是否需要追加新内容
@@ -297,6 +298,15 @@ export const roomSlice = createSlice({
       state.isAITalking = false;
       state.isUserTalking = false;
     },
+    updateShowSubtitle: (state, { payload }) => {
+      state.isShowSubtitle = payload.isShowSubtitle;
+    },
+    updateFullScreen: (state, { payload }) => {
+      state.isFullScreen = payload.isFullScreen;
+    },
+    updatecustomSceneName: (state, { payload }) => {
+      state.customSceneName = payload.customSceneName;
+    },
   },
 });
 
@@ -314,14 +324,15 @@ export const {
   updateAIGCState,
   updateAITalkState,
   updateAIThinkState,
-  updateAIConfig,
-  updateModelMode,
   setHistoryMsg,
   clearHistoryMsg,
   clearCurrentMsg,
   setInterruptMsg,
   updateNetworkQuality,
   updateScene,
+  updateShowSubtitle,
+  updateFullScreen,
+  updatecustomSceneName,
 } = roomSlice.actions;
 
 export default roomSlice.reducer;

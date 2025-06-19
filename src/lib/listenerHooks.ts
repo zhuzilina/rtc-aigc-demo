@@ -29,7 +29,6 @@ import {
   updateRemoteUser,
   addAutoPlayFail,
   removeAutoPlayFail,
-  updateAITalkState,
   updateNetworkQuality,
 } from '@/store/slices/room';
 import RtcClient, { IEventListener } from './RtcClient';
@@ -222,14 +221,6 @@ const useRtcListeners = (): IEventListener => {
     playStatus.current[userId] = playUser;
   };
 
-  const handleUserStartAudioCapture = (_: { userId: string }) => {
-    dispatch(updateAITalkState({ isAITalking: true }));
-  };
-
-  const handleUserStopAudioCapture = (_: { userId: string }) => {
-    dispatch(updateAITalkState({ isAITalking: false }));
-  };
-
   const handleNetworkQuality = (
     uplinkNetworkQuality: NetworkQuality,
     downlinkNetworkQuality: NetworkQuality
@@ -262,8 +253,6 @@ const useRtcListeners = (): IEventListener => {
     handleAudioDeviceStateChanged,
     handleAutoPlayFail,
     handlePlayerEvent,
-    handleUserStartAudioCapture,
-    handleUserStopAudioCapture,
     handleRoomBinaryMessageReceived,
     handleNetworkQuality,
   };

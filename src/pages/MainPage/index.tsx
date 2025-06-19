@@ -3,27 +3,47 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
+import { useEffect } from 'react';
 import Header from '@/components/Header';
 import ResizeWrapper from '@/components/ResizeWrapper';
 import Menu from './Menu';
-import utils from '@/utils/utils';
+import { useIsMobile } from '@/utils/utils';
 import MainArea from './MainArea';
+import { ABORT_VISIBILITY_CHANGE, useLeave } from '@/lib/useCommon';
 import styles from './index.module.less';
 
 export default function () {
+  const leaveRoom = useLeave();
+
+  useEffect(() => {
+    const isOriginalDemo = window.location.host.startsWith('localhost');
+    const handler = () => {
+      if (
+        document.visibilityState === 'hidden' &&
+        !sessionStorage.getItem(ABORT_VISIBILITY_CHANGE)
+      ) {
+        leaveRoom();
+      }
+    };
+    !isOriginalDemo && document.addEventListener('visibilitychange', handler);
+    return () => {
+      !isOriginalDemo && document.removeEventListener('visibilitychange', handler);
+    };
+  }, []);
+
   return (
     <ResizeWrapper className={styles.container}>
       <Header />
       <div
         className={styles.main}
         style={{
-          padding: utils.isMobile() ? '' : '24px 124px',
+          padding: useIsMobile() ? '' : '24px',
         }}
       >
-        <div className={`${styles.mainArea} ${utils.isMobile() ? styles.isMobile : ''}`}>
+        <div className={`${styles.mainArea} ${useIsMobile() ? styles.isMobile : ''}`}>
           <MainArea />
         </div>
-        {utils.isMobile() ? null : (
+        {useIsMobile() ? null : (
           <div className={styles.operationArea}>
             <Menu />
           </div>

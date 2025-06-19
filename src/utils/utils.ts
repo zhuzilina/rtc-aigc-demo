@@ -3,112 +3,80 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-class Utils {
-  formatTime = (time: number): string => {
-    if (time < 0) {
-      return '00:00';
-    }
-    let minutes: number | string = Math.floor(time / 60);
-    let seconds: number | string = time % 60;
-    minutes = minutes > 9 ? `${minutes}` : `0${minutes}`;
-    seconds = seconds > 9 ? `${seconds}` : `0${seconds}`;
+import { useEffect, useState } from 'react';
 
-    return `${minutes}:${seconds}`;
-  };
+/**
+ * @brief 将字符串包装成 TLV
+ */
+export const string2tlv = (str: string, type: string) => {
+  const typeBuffer = new Uint8Array(4);
 
-  formatDate = (date: Date): string => {
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
-    const seconds = date.getSeconds();
-
-    const formattedHours = hours.toString().padStart(2, '0');
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-    const formattedSeconds = seconds.toString().padStart(2, '0');
-
-    return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-  };
-
-  setSessionInfo = (params: { [key: string]: any }) => {
-    Object.keys(params).forEach((key) => {
-      sessionStorage.setItem(key, params[key]);
-    });
-  };
-
-  /**
-   * @brief 获取 url 参数
-   */
-  getUrlArgs = () => {
-    const query = window.location.search.substring(1);
-    const pairs = query.split('&');
-    return pairs.reduce<{ [key: string]: string }>((queries, pair) => {
-      const [key, value] = pair.split('=');
-      if (key && value) {
-        queries[key] = decodeURIComponent(value);
-      }
-      return queries;
-    }, {});
-  };
-
-  isPureObject = (target: any) => Object.prototype.toString.call(target).includes('Object');
-
-  isArray = Array.isArray;
-
-  /**
-   * @brief 将字符串包装成 TLV
-   */
-  string2tlv(str: string, type: string) {
-    const typeBuffer = new Uint8Array(4);
-
-    for (let i = 0; i < type.length; i++) {
-      typeBuffer[i] = type.charCodeAt(i);
-    }
-
-    const lengthBuffer = new Uint32Array(1);
-    const valueBuffer = new TextEncoder().encode(str);
-
-    lengthBuffer[0] = valueBuffer.length;
-
-    const tlvBuffer = new Uint8Array(typeBuffer.length + 4 + valueBuffer.length);
-
-    tlvBuffer.set(typeBuffer, 0);
-
-    tlvBuffer[4] = (lengthBuffer[0] >> 24) & 0xff;
-    tlvBuffer[5] = (lengthBuffer[0] >> 16) & 0xff;
-    tlvBuffer[6] = (lengthBuffer[0] >> 8) & 0xff;
-    tlvBuffer[7] = lengthBuffer[0] & 0xff;
-
-    tlvBuffer.set(valueBuffer, 8);
-    return tlvBuffer.buffer;
+  for (let i = 0; i < type.length; i++) {
+    typeBuffer[i] = type.charCodeAt(i);
   }
 
-  /**
-   * @brief TLV 数据格式转换成字符串
-   * @note TLV 数据格式
-   * | magic number | length(big-endian) | value |
-   * @param {ArrayBufferLike} tlvBuffer
-   * @returns
-   */
-  tlv2String(tlvBuffer: ArrayBufferLike) {
-    const typeBuffer = new Uint8Array(tlvBuffer, 0, 4);
-    const lengthBuffer = new Uint8Array(tlvBuffer, 4, 4);
-    const valueBuffer = new Uint8Array(tlvBuffer, 8);
+  const lengthBuffer = new Uint32Array(1);
+  const valueBuffer = new TextEncoder().encode(str);
 
-    let type = '';
-    for (let i = 0; i < typeBuffer.length; i++) {
-      type += String.fromCharCode(typeBuffer[i]);
-    }
+  lengthBuffer[0] = valueBuffer.length;
 
-    const length =
-      (lengthBuffer[0] << 24) | (lengthBuffer[1] << 16) | (lengthBuffer[2] << 8) | lengthBuffer[3];
+  const tlvBuffer = new Uint8Array(typeBuffer.length + 4 + valueBuffer.length);
 
-    const value = new TextDecoder().decode(valueBuffer.subarray(0, length));
+  tlvBuffer.set(typeBuffer, 0);
 
-    return { type, value };
+  tlvBuffer[4] = (lengthBuffer[0] >> 24) & 0xff;
+  tlvBuffer[5] = (lengthBuffer[0] >> 16) & 0xff;
+  tlvBuffer[6] = (lengthBuffer[0] >> 8) & 0xff;
+  tlvBuffer[7] = lengthBuffer[0] & 0xff;
+
+  tlvBuffer.set(valueBuffer, 8);
+  return tlvBuffer.buffer;
+};
+
+/**
+ * @brief TLV 数据格式转换成字符串
+ * @note TLV 数据格式
+ * | magic number | length(big-endian) | value |
+ * @param {ArrayBufferLike} tlvBuffer
+ * @returns
+ */
+export const tlv2String = (tlvBuffer: ArrayBufferLike) => {
+  const typeBuffer = new Uint8Array(tlvBuffer, 0, 4);
+  const lengthBuffer = new Uint8Array(tlvBuffer, 4, 4);
+  const valueBuffer = new Uint8Array(tlvBuffer, 8);
+
+  let type = '';
+  for (let i = 0; i < typeBuffer.length; i++) {
+    type += String.fromCharCode(typeBuffer[i]);
   }
 
-  isMobile() {
-    return /Mobi|Android|iPhone|iPad|Windows Phone/i.test(window.navigator.userAgent);
-  }
+  const length =
+    (lengthBuffer[0] << 24) | (lengthBuffer[1] << 16) | (lengthBuffer[2] << 8) | lengthBuffer[3];
+
+  const value = new TextDecoder().decode(valueBuffer.subarray(0, length));
+
+  return { type, value };
+};
+
+export const isMobile = () =>
+  /Mobi|Android|iPhone|iPad|Windows Phone/i.test(window.navigator.userAgent) ||
+  window?.innerWidth < 767;
+
+export function useIsMobile() {
+  const getIsMobile = () =>
+    /Mobi|Android|iPhone|iPad|Windows Phone/i.test(window.navigator.userAgent) ||
+    window.innerWidth < 767;
+
+  const [isMobile, setIsMobile] = useState(getIsMobile());
+
+  useEffect(() => {
+    const handleResize = () => {
+      const value = getIsMobile();
+      setIsMobile(value);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
 }
-
-export default new Utils();

@@ -27,3 +27,7 @@ yarn-error.log*
 /Server/log
 /log
 yarn.lock
+.eslintcache
+pnpm-lock.yaml
+dist/
+log/

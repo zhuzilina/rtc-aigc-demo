@@ -11,7 +11,7 @@ interface IAudioLoadingProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 function AudioLoading(props: IAudioLoadingProps) {
-  const { loading = false, className = '', ...rest } = props;
+  const { loading = false, className = '', color, ...rest } = props;
   return (
     <div className={`${style.loader} ${className}`} {...rest}>
       {Array(3)
@@ -22,6 +22,7 @@ function AudioLoading(props: IAudioLoadingProps) {
             className={`${style.dot} ${loading ? style.dotter : ''}`}
             style={{
               animationDelay: `${index * 0.3}s`,
+              backgroundColor: color || 'rgba(148, 116, 255, 1)',
             }}
           />
         ))}

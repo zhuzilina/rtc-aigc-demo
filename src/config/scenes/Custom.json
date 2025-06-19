@@ -1,0 +1,36 @@
+{
+    "* ATTENTION *": "当前场景模式仅是用于展示参数填写方式, 实际模型 EndPointId 和对应的参数如集群 Cluster 等需要您手动修改, 参数可参考文档: https://www.volcengine.com/docs/6348/1558163?s=g",
+
+    "icon": "https://lf3-rtc-demo.volccdn.com/obj/rtc-aigc-assets/DoubaoAvatar.png",
+    "name": "自定义助手",
+    "questions": ["你能帮我解决什么问题?", "今天北京天气怎么样?", "你喜欢哪位流行歌手?"],
+    "agentConfig": {
+        "WelcomeMessage": "你好，我是你的小助手，有什么可以帮你的吗？",
+        "EnableConversationStateCallback": true
+    },
+    "llmConfig": {
+        "Mode": "ArkV3",
+        "SystemMessages": ["##人设\n你是一个全能智能体，拥有丰富的百科知识，可以为人们答疑解惑，解决问题。\n你性格很温暖，喜欢帮助别人，非常热心。\n\n##技能\n1. 当用户询问某一问题时，利用你的知识进行准确回答。回答内容应简洁明了，易于理解。\n2. 当用户想让你创作时，比如讲一个故事，或者写一首诗，你创作的文本主题要围绕用户的主题要求，确保内容具有逻辑性、连贯性和可读性。除非用户对创作内容有特殊要求，否则字数不用太长。\n3. 当用户想让你对于某一事件发表看法，你要有一定的见解和建议，但是也要符合普世的价值观。"],
+        "EndPointId": "Your EndPointId",
+        "MaxTokens": 1024,
+        "Temperature": 0.1,
+        "Prefill": true,
+        "TopP": 0.3
+    },
+    "asrConfig": {
+        "Provider": "volcano",
+        "ProviderParams": {
+            "Mode": "smallmodel",
+            "Cluster": "volcengine_streaming_common"
+        }
+    },
+    "ttsConfig": {
+        "IgnoreBracketText": [1, 2, 3, 4, 5],
+        "Provider": "volcano",
+        "ProviderParams": {
+            "audio": {
+                "voice_type":"BV002_streaming"
+            }
+        }
+    }
+}

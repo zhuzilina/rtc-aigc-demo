@@ -12,7 +12,7 @@ import {
   updateAIThinkState,
 } from '@/store/slices/room';
 import RtcClient from '@/lib/RtcClient';
-import Utils from '@/utils/utils';
+import { string2tlv, tlv2String } from '@/utils/utils';
 
 export type AnyRecord = Record<string, any>;
 
@@ -87,7 +87,7 @@ export const useMessageHandler = () => {
     [MESSAGE_TYPE.BRIEF]: (parsed: AnyRecord) => {
       const { Stage } = parsed || {};
       const { Code, Description } = Stage || {};
-      logger.debug(Code, Description);
+      logger.debug('[MESSAGE_TYPE.BRIEF]: ', Code, Description);
       switch (Code) {
         case AGENT_BRIEF.THINKING:
           dispatch(updateAIThinkState({ isAIThinking: true }));
@@ -114,14 +114,12 @@ export const useMessageHandler = () => {
       /** debounce 记录用户输入文字 */
       if (data) {
         const { text: msg, definite, userId: user, paragraph } = data;
-        logger.debug('handleRoomBinaryMessageReceived', data);
+        const isAudioEnable = RtcClient.getAgentEnabled();
         if ((window as any)._debug_mode) {
-          dispatch(setHistoryMsg({ msg, user, paragraph, definite }));
-        } else {
-          const isAudioEnable = RtcClient.getAudioBotEnabled();
-          if (isAudioEnable) {
-            dispatch(setHistoryMsg({ text: msg, user, paragraph, definite }));
-          }
+          logger.debug('handleRoomBinaryMessageReceived', data);
+        }
+        if (isAudioEnable) {
+          dispatch(setHistoryMsg({ text: msg, user, paragraph, definite }));
         }
       }
     },
@@ -138,7 +136,7 @@ export const useMessageHandler = () => {
 
       RtcClient.engine.sendUserBinaryMessage(
         'RobotMan_',
-        Utils.string2tlv(
+        string2tlv(
           JSON.stringify({
             ToolCallID: parsed?.tool_calls?.[0]?.id,
             Content: map[name.toLocaleLowerCase().replaceAll('_', '')],
@@ -152,7 +150,7 @@ export const useMessageHandler = () => {
   return {
     parser: (buffer: ArrayBuffer) => {
       try {
-        const { type, value } = Utils.tlv2String(buffer);
+        const { type, value } = tlv2String(buffer);
         maps[type as MESSAGE_TYPE]?.(JSON.parse(value));
       } catch (e) {
         logger.debug('parse error', e);

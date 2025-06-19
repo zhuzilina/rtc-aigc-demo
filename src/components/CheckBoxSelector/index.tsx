@@ -7,7 +7,7 @@ import { useEffect, useMemo, useState, memo } from 'react';
 import { Button, Drawer } from '@arco-design/web-react';
 import CheckBox from '@/components/CheckBox';
 import styles from './index.module.less';
-import utils from '@/utils/utils';
+import { isMobile } from '@/utils/utils';
 
 export interface ICheckBoxItemProps {
   icon?: string;
@@ -59,7 +59,7 @@ function CheckBoxSelector(props: IProps) {
       </div>
       <Drawer
         style={{
-          width: utils.isMobile() ? '100%' : '650px',
+          width: isMobile() ? '100%' : '650px',
         }}
         closable={false}
         className={styles.modal}

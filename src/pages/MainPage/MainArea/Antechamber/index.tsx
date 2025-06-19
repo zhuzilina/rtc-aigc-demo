@@ -3,19 +3,23 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import AvatarCard from '@/components/AvatarCard';
-import Utils from '@/utils/utils';
-import aigcConfig from '@/config';
+import { useDispatch } from 'react-redux';
+import { isMobile } from '@/utils/utils';
+import { Configuration } from '@/config';
 import InvokeButton from '@/pages/MainPage/MainArea/Antechamber/InvokeButton';
-import { useJoin } from '@/lib/useCommon';
+import { useJoin, useVisionMode } from '@/lib/useCommon';
 import style from './index.module.less';
+import AIChangeCard from '@/components/AiChangeCard';
+import { updateFullScreen } from '@/store/slices/room';
 
 function Antechamber() {
+  const dispatch = useDispatch();
   const [joining, dispatchJoin] = useJoin();
-  const username = aigcConfig.BaseConfig.UserId;
-  const roomId = aigcConfig.BaseConfig.RoomId;
-
+  const username = Configuration.UserId;
+  const roomId = Configuration.RoomId;
+  const { isScreenMode } = useVisionMode();
   const handleJoinRoom = () => {
+    dispatch(updateFullScreen({ isFullScreen: !isMobile() && !isScreenMode })); // 初始化
     if (!joining) {
       dispatchJoin(
         {
@@ -29,11 +33,12 @@ function Antechamber() {
   };
 
   return (
-    <div className={style.wrapper}>
-      <AvatarCard className={`${style.avatar} ${Utils.isMobile() ? style.mobile : ''}`} />
-      <div className={style.title}>AI 语音助手</div>
-      <div className={style.description}>Powered by 豆包大模型和火山引擎视频云 RTC</div>
+    <div className={`${style.wrapper} ${isMobile() ? style.mobile : ''}`}>
+      <AIChangeCard />
       <InvokeButton onClick={handleJoinRoom} loading={joining} className={style['invoke-btn']} />
+      {isMobile() ? null : (
+        <div className={style.description}>Powered by 豆包大模型和火山引擎视频云 RTC</div>
+      )}
     </div>
   );
 }

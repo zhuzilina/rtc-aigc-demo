@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Drawer } from '@arco-design/web-react';
+import { Drawer, DrawerProps } from '@arco-design/web-react';
 import { IconRight } from '@arco-design/web-react/icon';
 import styles from './index.module.less';
 
@@ -20,8 +20,8 @@ type IDrawerRowItemProps = {
     onCancel?: () => void;
     onConfirm?: (handleClose: () => void) => void;
     children?: React.ReactNode;
-    footer?: boolean;
-  };
+    footer?: React.ReactNode | boolean;
+  } & DrawerProps;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 function DrawerRowItem(props: IDrawerRowItemProps) {

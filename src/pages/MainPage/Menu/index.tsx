@@ -4,61 +4,49 @@
  */
 
 import VERTC from '@volcengine/rtc';
-import { useEffect, useState } from 'react';
 import { Tooltip, Typography } from '@arco-design/web-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useVisionMode } from '@/lib/useCommon';
 import { RootState } from '@/store';
-import RtcClient from '@/lib/RtcClient';
 import Operation from './components/Operation';
-import { Questions } from '@/config';
-import { COMMAND, INTERRUPT_PRIORITY } from '@/utils/handler';
 import CameraArea from '../MainArea/Room/CameraArea';
-import { setHistoryMsg, setInterruptMsg } from '@/store/slices/room';
-import utils from '@/utils/utils';
+import { isMobile } from '@/utils/utils';
+import { SceneMap } from '@/config';
 import packageJson from '../../../../package.json';
 import styles from './index.module.less';
+import AISettingButton from './components/AISettingButton';
 
 function Menu() {
-  const dispatch = useDispatch();
-  const [question, setQuestion] = useState('');
   const room = useSelector((state: RootState) => state.room);
-  const scene = room.scene;
+  const { scene } = room;
+  const voice = SceneMap[scene]?.ttsConfig?.ProviderParams?.audio?.voice_type || '';
+  const model = SceneMap[scene]?.llmConfig?.EndPointId || SceneMap[scene]?.llmConfig?.BotId;
   const isJoined = room?.isJoined;
-  const isVisionMode = useVisionMode();
-
-  const handleQuestion = (que: string) => {
-    RtcClient.commandAudioBot(COMMAND.EXTERNAL_TEXT_TO_LLM, INTERRUPT_PRIORITY.HIGH, que);
-    setQuestion(que);
-  };
-
-  useEffect(() => {
-    if (question && !room.isAITalking) {
-      dispatch(setInterruptMsg());
-      dispatch(
-        setHistoryMsg({
-          text: question,
-          user: RtcClient.basicInfo.user_id,
-          paragraph: true,
-          definite: true,
-        })
-      );
-      setQuestion('');
-    }
-  }, [question, room.isAITalking]);
+  const { isVisionMode } = useVisionMode();
+  const requestId = sessionStorage.getItem('RequestID');
 
   return (
     <div className={styles.wrapper}>
-      {isJoined && utils.isMobile() && isVisionMode ? (
+      {isJoined && isMobile() && isVisionMode ? (
         <div className={styles['mobile-camera-wrapper']}>
           <CameraArea className={styles['mobile-camera']} />
         </div>
       ) : null}
       <div className={`${styles.box} ${styles.info}`}>
-        <div className={styles.bold}>Demo Version {packageJson.version}</div>
-        <div className={styles.bold}>SDK Version {VERTC.getSdkVersion()}</div>
+        <div className={styles.title}>AI 人设：{scene}</div>
+        <div>
+          <div className={styles.desc}>音色 {voice}</div>
+          <div className={styles.desc}>{model}</div>
+        </div>
+        {isJoined && <AISettingButton />}
+      </div>
+      {isJoined ? <Operation /> : ''}
+      <div className={`${styles.box} ${styles.info}`}>
+        <div className={styles.title}>{isJoined ? '其他信息' : '版本信息'}</div>
+        <div className={styles.desc}>Demo Version {packageJson.version}</div>
+        <div className={styles.desc}>SDK Version {VERTC.getSdkVersion()}</div>
         {isJoined ? (
-          <div className={styles.gray}>
+          <div className={styles.desc}>
             房间ID{' '}
             <Tooltip content={room.roomId || '-'}>
               <Typography.Paragraph
@@ -75,20 +63,25 @@ function Menu() {
         ) : (
           ''
         )}
+        {room.isAIGCEnable ? (
+          <div className={styles.desc}>
+            RequestID{' '}
+            <Tooltip content={requestId || '-'}>
+              <Typography.Paragraph
+                ellipsis={{
+                  rows: 1,
+                  expandable: false,
+                }}
+                className={styles.value}
+              >
+                {requestId || '-'}
+              </Typography.Paragraph>
+            </Tooltip>
+          </div>
+        ) : (
+          ''
+        )}
       </div>
-      {isJoined ? (
-        <div className={`${styles.box} ${styles.questions}`}>
-          <div className={styles.title}>点击下述问题进行提问:</div>
-          {Questions[scene].map((question) => (
-            <div onClick={() => handleQuestion(question)} className={styles.line} key={question}>
-              {question}
-            </div>
-          ))}
-        </div>
-      ) : (
-        ''
-      )}
-      {isJoined ? <Operation /> : ''}
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import VERTC, { MediaType } from '@volcengine/rtc';
 import { Modal } from '@arco-design/web-react';
-import Utils from '@/utils/utils';
 import RtcClient from '@/lib/RtcClient';
 import {
   clearCurrentMsg,
@@ -20,6 +19,7 @@ import {
 
 import useRtcListeners from '@/lib/listenerHooks';
 import { RootState } from '@/store';
+import Apis from '@/app/index';
 
 import {
   updateMediaInputs,
@@ -27,8 +27,9 @@ import {
   setDevicePermissions,
 } from '@/store/slices/device';
 import logger from '@/utils/logger';
-import aigcConfig, { ScreenShareScene, isVisionMode } from '@/config';
+import { Configuration, SceneMap } from '@/config';
 
+export const ABORT_VISIBILITY_CHANGE = 'abortVisibilityChange';
 export interface FormProps {
   username: string;
   roomId: string;
@@ -36,10 +37,10 @@ export interface FormProps {
 }
 
 export const useVisionMode = () => {
-  const room = useSelector((state: RootState) => state.room);
+  const scene = useSelector((state: RootState) => state.room.scene);
   return {
-    isVisionMode: isVisionMode(room.aiConfig?.Config?.LLMConfig.ModelName),
-    isScreenMode: ScreenShareScene.includes(room.scene),
+    isVisionMode: SceneMap?.[scene]?.llmConfig?.VisionConfig?.Enable,
+    isScreenMode: SceneMap?.[scene]?.llmConfig?.VisionConfig?.SnapshotConfig?.StreamType === 1,
   };
 };
 
@@ -113,6 +114,9 @@ export const useDeviceState = () => {
 
   const switchScreenCapture = async (controlPublish = true) => {
     try {
+      !isScreenPublished
+        ? sessionStorage.setItem(ABORT_VISIBILITY_CHANGE, 'true')
+        : sessionStorage.removeItem(ABORT_VISIBILITY_CHANGE);
       if (controlPublish) {
         await (!isScreenPublished
           ? RtcClient.publishScreenStream(MediaType.VIDEO)
@@ -127,6 +131,8 @@ export const useDeviceState = () => {
     } catch {
       console.warn('Not Authorized.');
     }
+    sessionStorage.removeItem(ABORT_VISIBILITY_CHANGE);
+    return false;
   };
 
   return {
@@ -162,25 +168,26 @@ export const useJoin = (): [
 ] => {
   const devicePermissions = useSelector((state: RootState) => state.device.devicePermissions);
   const room = useSelector((state: RootState) => state.room);
+  const scene = room.scene;
 
   const dispatch = useDispatch();
 
-  const { switchCamera, switchMic } = useDeviceState();
+  const { switchMic } = useDeviceState();
   const [joining, setJoining] = useState(false);
   const listeners = useRtcListeners();
 
   const handleAIGCModeStart = async () => {
     if (room.isAIGCEnable) {
-      await RtcClient.stopAudioBot();
+      await RtcClient.stopAgent();
       dispatch(clearCurrentMsg());
-      await RtcClient.startAudioBot();
+      await RtcClient.startAgent(scene);
     } else {
-      await RtcClient.startAudioBot();
+      await RtcClient.startAgent(scene);
     }
     dispatch(updateAIGCState({ isAIGCEnable: true }));
   };
 
-  async function disPatchJoin(formValues: FormProps): Promise<boolean | undefined> {
+  async function disPatchJoin(): Promise<boolean | undefined> {
     if (joining) {
       return;
     }
@@ -194,18 +201,28 @@ export const useJoin = (): [
       return;
     }
 
-    setJoining(true);
-    const { username, roomId } = formValues;
-    const isVision = isVisionMode(aigcConfig.Model);
-    const shouldGetVideoPermission = isVision && !ScreenShareScene.includes(room.scene);
+    const { appId } = await Apis.Basic.getRtcInfo();
 
-    const token = aigcConfig.BaseConfig.Token;
+    const { Token, RoomId, UserId } = Configuration;
+    let token = Token;
+    if (!token) {
+      // 通过 API 生成 Token, 这要求您在 /Server/sensitive.js 下填写 RTC_INFO.appId 和 RTC_INFO.appKey。
+      // 您也可以手动生成 Token, 并修改 /src/config/config.ts 中的 RoomId、UserId、Token 字段。
+      // 查阅 README 获取更多信息。
+      const res = await Apis.Basic.generateRtcAccessToken({
+        roomId: RoomId,
+        userId: UserId,
+      });
+      token = res.token;
+    }
+
+    setJoining(true);
 
     /** 1. Create RTC Engine */
     const engineParams = {
-      appId: aigcConfig.BaseConfig.AppId,
-      roomId,
-      uid: username,
+      appId,
+      roomId: RoomId,
+      uid: UserId,
     };
     await RtcClient.createEngine(engineParams);
 
@@ -213,20 +230,20 @@ export const useJoin = (): [
     RtcClient.addEventListeners(listeners);
 
     /** 2.2 RTC starting to join room */
-    await RtcClient.joinRoom(token!, username);
-    console.log(' ------ userJoinRoom\n', `roomId: ${roomId}\n`, `uid: ${username}`);
+    await RtcClient.joinRoom(token!, UserId);
+    console.log(' ------ userJoinRoom\n', `roomId: ${RoomId}\n`, `uid: ${UserId}`);
     /** 3. Set users' devices info */
     const mediaDevices = await RtcClient.getDevices({
       audio: true,
-      video: shouldGetVideoPermission,
+      video: false,
     });
 
     dispatch(
       localJoinRoom({
-        roomId,
+        roomId: RoomId,
         user: {
-          username,
-          userId: username,
+          username: UserId,
+          userId: UserId,
         },
       })
     );
@@ -243,25 +260,10 @@ export const useJoin = (): [
     if (devicePermissions.audio) {
       try {
         await switchMic();
-        // RtcClient.setAudioVolume(30);
       } catch (e) {
         logger.debug('No permission for mic');
       }
     }
-
-    if (devicePermissions.video && shouldGetVideoPermission) {
-      try {
-        await switchCamera();
-      } catch (e) {
-        logger.debug('No permission for camera');
-      }
-    }
-
-    Utils.setSessionInfo({
-      username,
-      roomId,
-      publishAudio: true,
-    });
 
     handleAIGCModeStart();
   }

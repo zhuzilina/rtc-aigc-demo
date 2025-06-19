@@ -10,7 +10,7 @@ import { IconArrowDown, IconArrowUp } from '@arco-design/web-react/icon';
 import { NetworkQuality } from '@volcengine/rtc';
 import { RootState } from '@/store';
 import style from './index.module.less';
-import Config from '@/config';
+import { Configuration } from '@/config';
 
 enum INDICATOR_COLORS {
   GREAT = 'rgba(35, 195, 67, 1)',
@@ -35,7 +35,8 @@ function NetworkIndicator() {
   const delay = room.localUser.audioStats?.rtt;
   const audioLossRateUpper = room.localUser.audioStats?.audioLossRate || 0;
   const audioLossRateLower =
-    room.remoteUsers.find((user) => user.userId === Config.BotName)?.audioStats?.audioLossRate || 0;
+    room.remoteUsers.find((user) => user.userId === Configuration.BotName)?.audioStats
+      ?.audioLossRate || 0;
 
   const indicators = useMemo(() => {
     switch (networkQuality) {

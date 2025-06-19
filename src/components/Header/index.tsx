@@ -6,7 +6,7 @@
 import { Button, Divider, Popover } from '@arco-design/web-react';
 import { IconMenu } from '@arco-design/web-react/icon';
 import NetworkIndicator from '@/components/NetworkIndicator';
-import utils from '@/utils/utils';
+import { useIsMobile } from '@/utils/utils';
 import Logo from '@/assets/img/Logo.svg';
 import styles from './index.module.less';
 
@@ -45,7 +45,7 @@ function Header(props: HeaderProps) {
       }}
     >
       <div className={styles['header-logo']}>
-        {utils.isMobile() ? null : (
+        {useIsMobile() ? null : (
           <Popover
             content={
               <div className={styles['menu-wrapper']}>
@@ -72,7 +72,7 @@ function Header(props: HeaderProps) {
         <NetworkIndicator />
       </div>
       {children}
-      {utils.isMobile() ? null : (
+      {useIsMobile() ? null : (
         <div className={styles['header-right']}>
           <div
             className={styles['header-right-text']}
