@@ -3,50 +3,44 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import CheckScene from './CheckScene';
-import { updateScene } from '@/store/slices/room';
+import { SceneConfig, updateScene } from '@/store/slices/room';
+import { useScene } from '@/lib/useCommon';
 import style from './index.module.less';
-import { Scenes, SceneMap } from '@/config';
-import { useVisionMode } from '@/lib/useCommon';
 
 function AIChangeCard() {
-  const room = useSelector((state: RootState) => state.room);
+  const { scene, sceneConfigMap } = useSelector((state: RootState) => state.room);
   const dispatch = useDispatch();
-  const [scene, setScene] = useState(room.scene);
-  const { isVisionMode } = useVisionMode();
-  const avatar = SceneMap[scene]?.icon;
+  const { icon, isVision } = useScene();
+  const Scenes = Object.keys(sceneConfigMap).map(key => sceneConfigMap[key]);
 
   const handleChecked = (checkedScene: string) => {
-    setScene(checkedScene);
-    dispatch(updateScene({ scene: checkedScene }));
+    dispatch(updateScene(checkedScene));
   };
 
   return (
     <div className={style.card}>
       <div className={style.avatar}>
-        <img id="avatar-card" src={avatar} alt="Avatar" />
+        <img id="avatar-card" src={icon} alt="Avatar" />
       </div>
       <div className={style.title}>
         <div>Hi，欢迎体验实时对话式 AI</div>
         <div className={style.desc}>
-          {isVisionMode ? <>支持豆包 Vision 模型和 深度思考模型，</> : ''}
+          {isVision ? <>支持豆包 Vision 模型和 深度思考模型，</> : ''}
           超多对话场景等你开启
         </div>
       </div>
       <div className={style.sceneContainer}>
-        {Scenes.map((key) =>
-          key ? (
-            <CheckScene
-              key={key.name}
-              icon={key.icon}
-              title={key.name}
-              checked={key.name === scene}
-              onClick={() => handleChecked(key.name)}
-            />
-          ) : null
+        {Scenes.map((key: SceneConfig) =>
+          <CheckScene
+            key={key.name}
+            icon={key.icon}
+            title={key.name}
+            checked={key.id === scene}
+            onClick={() => handleChecked(key.id)}
+          />
         )}
       </div>
     </div>

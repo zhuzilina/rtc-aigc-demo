@@ -6,9 +6,8 @@
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import UserTag from '../UserTag';
+import { useDeviceState, useScene } from '@/lib/useCommon';
 import style from './index.module.less';
-import { useDeviceState } from '@/lib/useCommon';
-import { SceneMap } from '@/config';
 
 interface IAiAvatarCardProps {
   showStatus: boolean;
@@ -21,8 +20,8 @@ const THRESHOLD_VOLUME = 18;
 function AiAvatarCard(props: IAiAvatarCardProps) {
   const { showStatus, showUserTag, className } = props;
   const room = useSelector((state: RootState) => state.room);
+  const { icon } = useScene();
   const { scene, isAITalking, isFullScreen } = room;
-  const avatar = SceneMap[scene]?.icon;
   const volume = room.localUser.audioPropertiesInfo?.linearVolume || 0;
   const { isAudioPublished } = useDeviceState();
   const isLoading = volume >= THRESHOLD_VOLUME && isAudioPublished;
@@ -30,7 +29,7 @@ function AiAvatarCard(props: IAiAvatarCardProps) {
   return (
     <div className={`${style.card} ${className} ${isFullScreen ? style.fullScreen : ''}`}>
       <div className={style.avatar}>
-        <img id="avatar-card" src={avatar} alt="Avatar" />
+        <img id="avatar-card" src={icon} alt="Avatar" />
         {showStatus ? (
           isAITalking ? (
             <div className={style.aiStatus}>

@@ -5,7 +5,7 @@
 
 import { memo, useState } from 'react';
 import { Drawer } from '@arco-design/web-react';
-import { useDeviceState, useLeave, useVisionMode } from '@/lib/useCommon';
+import { useDeviceState, useLeave, useScene } from '@/lib/useCommon';
 import { isMobile } from '@/utils/utils';
 import Menu from '../../Menu';
 
@@ -21,7 +21,7 @@ import ScreenOffSVG from '@/assets/img/ScreenOff.svg';
 function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className, ...rest } = props;
   const [open, setOpen] = useState(false);
-  const { isScreenMode } = useVisionMode();
+  const { isVision, isScreenMode } = useScene();
   const leaveRoom = useLeave();
   const {
     isAudioPublished,
@@ -31,7 +31,6 @@ function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
     switchCamera,
     switchScreenCapture,
   } = useDeviceState();
-  const { isVisionMode } = useVisionMode();
 
   return (
     <div className={`${className} ${style.btns} ${isMobile() ? style.column : ''}`} {...rest}>
@@ -41,7 +40,7 @@ function ToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
         className={style.btn}
         alt="mic"
       />
-      {!isVisionMode ? null : isScreenMode && !isMobile() ? (
+      {!isVision ? null : isScreenMode && !isMobile() ? (
         <img
           src={isScreenPublished ? 'new-screen-off.svg' : 'new-screen-on.svg'}
           onClick={() => switchScreenCapture()}

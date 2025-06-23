@@ -10,7 +10,7 @@ import { Switch, Select } from '@arco-design/web-react';
 import DrawerRowItem from '@/components/DrawerRowItem';
 import { RootState } from '@/store';
 import RtcClient from '@/lib/RtcClient';
-import { useDeviceState, useVisionMode } from '@/lib/useCommon';
+import { useDeviceState, useScene } from '@/lib/useCommon';
 import { updateSelectedDevice } from '@/store/slices/device';
 import { isMobile } from '@/utils/utils';
 import styles from './index.module.less';
@@ -34,7 +34,7 @@ function DeviceDrawerButton(props: IDeviceDrawerButtonProps) {
   const selectedDevice =
     type === MediaType.AUDIO ? devices.selectedMicrophone : devices.selectedCamera;
   const permission = devicePermissions?.[type === MediaType.AUDIO ? 'audio' : 'video'];
-  const { isScreenMode } = useVisionMode();
+  const { isScreenMode } = useScene();
   const isScreenEnable = device.isScreenPublished;
   const changeScreenPublished = device.switchScreenCapture;
 

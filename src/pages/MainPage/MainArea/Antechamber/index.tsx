@@ -5,30 +5,20 @@
 
 import { useDispatch } from 'react-redux';
 import { isMobile } from '@/utils/utils';
-import { Configuration } from '@/config';
 import InvokeButton from '@/pages/MainPage/MainArea/Antechamber/InvokeButton';
-import { useJoin, useVisionMode } from '@/lib/useCommon';
-import style from './index.module.less';
+import { useJoin, useScene } from '@/lib/useCommon';
 import AIChangeCard from '@/components/AiChangeCard';
 import { updateFullScreen } from '@/store/slices/room';
+import style from './index.module.less';
 
 function Antechamber() {
   const dispatch = useDispatch();
   const [joining, dispatchJoin] = useJoin();
-  const username = Configuration.UserId;
-  const roomId = Configuration.RoomId;
-  const { isScreenMode } = useVisionMode();
+  const { isScreenMode } = useScene();
   const handleJoinRoom = () => {
     dispatch(updateFullScreen({ isFullScreen: !isMobile() && !isScreenMode })); // 初始化
     if (!joining) {
-      dispatchJoin(
-        {
-          username,
-          roomId,
-          publishAudio: true,
-        },
-        false
-      );
+      dispatchJoin();
     }
   };
 

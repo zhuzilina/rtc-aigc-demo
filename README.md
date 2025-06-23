@@ -1,7 +1,7 @@
 # 交互式AIGC场景 AIGC Demo
 
 此 Demo 为简化版本, 如您有 1.5.x 版本 UI 的诉求, 可切换至 1.5.1 分支。
-跑通阶段时, 无须关心代码实现，仅需按需完成 `src/config/scenes/*.json` 的填充以及 `Server/sensitive.js` 中的信息填充即可。
+跑通阶段时, 无须关心代码实现，仅需按需完成 `Server/scenes/*.json` 的场景信息填充即可。
 
 ## 简介
 - 在 AIGC 对话场景下，火山引擎 AIGC-RTC Server 云端服务，通过整合 RTC 音视频流处理，ASR 语音识别，大模型接口调用集成，以及 TTS 语音生成等能力，提供基于流式语音的端到端AIGC能力链路。
@@ -17,32 +17,22 @@
 ### 2. 服务开通
 开通 ASR、TTS、LLM、RTC 等服务，可参考 [开通服务](https://www.volcengine.com/docs/6348/1315561?s=g) 进行相关服务的授权与开通。
 
-### 3. 参数配置
-#### 3.1 服务端配置（`Server/sensitive.js`）
-- 必填参数:
-    - `ACCOUNT_INFO`：填写[火山引擎控制台](https://console.volcengine.com/iam/keymanage)的 AK、SK
-    - `RTC_INFO`：填写[应用管理](https://console.volcengine.com/rtc/aigc/listRTC)的 AppID、AppKey
-    - `ASRConfig`：填写 ASR AppID
-    - `TTSConfig`：填写 TTS AppID
-- 按需填充(未使用的部分可不填充):
-    - `LLMConfig`: 根据使用场景填写 CozeBot、CustomLLM。
-    - `ASRConfig`: 如您使用 `bigmodel` 模式, 需填写 ASRAccessToken。
-    - `TTSConfig`: 按需填充 TTSAppID、TTSToken。
+### 3. 场景配置
+`Server/scenes/*.json`
 
-#### 3.2 场景配置（`src/config/scenes/*.json`）
-您可以自定义具体场景, 并按需根据模版填充 OpenAPI 需要的参数。
+您可以自定义具体场景, 并按需根据模版填充 `SceneConfig`、`AccountConfig`、`RTCConfig`、`VoiceChat` 中需要的参数。
 
-Demo 中以 `Custom`、`VirtualGirlfriend`(视觉) 场景为例，您可以自行新增场景，并在代码中导入即可使用(`src/config/index.ts`)。
+Demo 中以 `Custom` 场景为例，您可以自行新增场景。
 
 注意：
-- `EndPointId`：在 [火山方舟-在线推理](https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint) 中创建接入点获取。
-- 敏感信息建议填充到 `Server/sensitive.js` 中。
-- Demo 会根据 JSON 参数中是否包含视觉理解相关的参数从而展示 视频采集/屏幕采集 相关的 UI。
-
-### 4. 自定义服务端
-如果您已自行完成服务端逻辑，可以：
-1. 修改 `src/config/index.ts` 中的 `AIGC_PROXY_HOST` 请求域名和接口
-2. 在 `src/app/api.ts` 中修改接口参数配置 `APIS_CONFIG`
+- `SceneConfig`：场景的信息，例如名称、头像等。
+- `AccountConfig`：场景下的账号信息，https://console.volcengine.com/iam/keymanage/ 获取 AK/SK。
+- `RTCConfig`：场景下的 RTC 配置。
+    - AppId、AppKey 可从 https://console.volcengine.com/rtc/aigc/listRTC 中获取。
+    - RoomId、UserId 可自定义也可不填，交由服务端生成。
+- `VoiceChat`: 场景下的 AIGC 配置。
+    - 可参考 https://www.volcengine.com/docs/6348/1558163 中参数描述，完整填写参数内容。
+    - 可通过 [快速跑通 Demo](https://console.volcengine.com/rtc/aigc/run?s=g) 快速获取参数, 跑通后点击右上角 `接入 API` 按钮复制相关代码贴到 JSON 配置文件中即可。
 
 ## 快速开始
 请注意，服务端和 Web 端都需要启动, 启动步骤如下:
@@ -92,11 +82,15 @@ yarn dev
 ## 更新日志
 
 ### OpenAPI 更新
-参考 [OpenAPI 更新](https://www.volcengine.com/docs/6348/1544162) 中与 实时对话式 AI 相关的更新内容。
+参考 [OpenAPI 更新](https://www.volcengine.com/docs/6348/116363?s=g) 中与 实时对话式 AI 相关的更新内容。
 
 ### Demo 更新
 
 #### [1.6.0]
+- 2025-06-23
+    - 简化 Demo 使用, 配置归一化。
+    - 删除无用组件。
+    - 追加服务端 README。
 - 2025-06-18
     - 更新 RTC Web SDK 版本至 4.66.16
     - 更新 UI 和参数配置方式

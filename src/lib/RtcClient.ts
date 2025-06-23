@@ -27,7 +27,6 @@ import VERTC, {
 import RTCAIAnsExtension from '@volcengine/rtc/extension-ainr';
 import { Message } from '@arco-design/web-react';
 import Apis from '@/app/index';
-import { Configuration, SceneMap } from '@/config';
 import { string2tlv } from '@/utils/utils';
 import { COMMAND, INTERRUPT_PRIORITY } from '@/utils/handler';
 
@@ -56,16 +55,11 @@ export interface IEventListener {
   ) => void;
 }
 
-interface EngineOptions {
-  appId: string;
-  uid: string;
-  roomId: string;
-}
-
 export interface BasicBody {
   app_id: string;
   room_id: string;
   user_id: string;
+  token?: string;
 }
 
 /**
@@ -85,13 +79,7 @@ export class RTCClient {
 
   audioBotStartTime = 0;
 
-  createEngine = async (props: EngineOptions) => {
-    this.basicInfo = {
-      app_id: props.appId,
-      room_id: props.roomId,
-      user_id: props.uid,
-    };
-
+  createEngine = async () => {
     this.engine = VERTC.createEngine(this.basicInfo.app_id);
     try {
       const AIAnsExtension = new RTCAIAnsExtension();
@@ -138,16 +126,17 @@ export class RTCClient {
     this.engine.on(VERTC.events.onNetworkQuality, handleNetworkQuality);
   };
 
-  joinRoom = (token: string | null, username: string): Promise<void> => {
+  joinRoom = () => {
     this.engine.enableAudioPropertiesReport({ interval: 1000 });
-    return this.engine.joinRoom(
-      token,
+    console.log(this.basicInfo);
+    this.engine.joinRoom(
+      this.basicInfo.token!,
       `${this.basicInfo.room_id!}`,
       {
         userId: this.basicInfo.user_id!,
         extraInfo: JSON.stringify({
           call_scene: 'RTC-AIGC',
-          user_name: username,
+          user_name: this.basicInfo.user_id,
           user_id: this.basicInfo.user_id,
         }),
       },
@@ -157,12 +146,12 @@ export class RTCClient {
         roomProfileType: RoomProfileType.chat,
       }
     );
+    console.log(' ------ userJoinRoom\n', `roomId: ${this.basicInfo.room_id}\n`, `uid: ${this.basicInfo.user_id}`);
   };
 
   leaveRoom = () => {
-    this.stopAgent();
     this.audioBotEnabled = false;
-    this.engine.leaveRoom();
+    this.engine.leaveRoom().catch();
     VERTC.destroyEngine(this.engine);
     this._audioCaptureDevice = undefined;
   };
@@ -360,27 +349,12 @@ export class RTCClient {
    * @brief 启用 AIGC
    */
   startAgent = async (scene: string) => {
-    const roomId = this.basicInfo.room_id;
-    const userId = this.basicInfo.user_id;
     if (this.audioBotEnabled) {
-      await this.stopAgent();
+      await this.stopAgent(scene);
     }
-    const params = SceneMap[scene];
-
-    params.agentConfig.UserId = Configuration.BotName;
-    params.agentConfig.TargetUserId = [userId];
-
-    const options = {
-      RoomId: roomId,
-      TaskId: userId,
-      AgentConfig: params.agentConfig,
-      Config: {
-        LLMConfig: params.llmConfig,
-        ASRConfig: params.asrConfig,
-        TTSConfig: params.ttsConfig,
-      },
-    };
-    await Apis.VoiceChat.StartVoiceChat(options);
+    await Apis.VoiceChat.StartVoiceChat({
+      SceneID: scene,
+    });
     this.audioBotEnabled = true;
     this.audioBotStartTime = Date.now();
   };
@@ -388,14 +362,10 @@ export class RTCClient {
   /**
    * @brief 关闭 AIGC
    */
-  stopAgent = async () => {
-    const roomId = this.basicInfo.room_id;
-    const userId = this.basicInfo.user_id;
+  stopAgent = async (scene: string) => {
     if (this.audioBotEnabled || sessionStorage.getItem('audioBotEnabled')) {
       await Apis.VoiceChat.StopVoiceChat({
-        AppId: this.basicInfo.app_id,
-        RoomId: roomId,
-        TaskId: userId,
+        SceneID: scene,
       });
       this.audioBotStartTime = 0;
       sessionStorage.removeItem('audioBotEnabled');
@@ -406,10 +376,20 @@ export class RTCClient {
   /**
    * @brief 命令 AIGC
    */
-  commandAgent = (command: COMMAND, interruptMode = INTERRUPT_PRIORITY.NONE, message = '') => {
+  commandAgent = ({
+    command,
+    agentName,
+    interruptMode = INTERRUPT_PRIORITY.NONE,
+    message = '',
+  }: {
+    command: COMMAND;
+    agentName: string;
+    interruptMode?: INTERRUPT_PRIORITY;
+    message?: string;
+  }) => {
     if (this.audioBotEnabled) {
       this.engine.sendUserBinaryMessage(
-        Configuration.BotName,
+        agentName,
         string2tlv(
           JSON.stringify({
             Command: command,
@@ -429,7 +409,7 @@ export class RTCClient {
    */
   updateAgent = async (scene: string) => {
     if (this.audioBotEnabled) {
-      await this.stopAgent();
+      await this.stopAgent(scene);
       await this.startAgent(scene);
     } else {
       await this.startAgent(scene);

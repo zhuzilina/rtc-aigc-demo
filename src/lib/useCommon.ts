@@ -19,7 +19,6 @@ import {
 
 import useRtcListeners from '@/lib/listenerHooks';
 import { RootState } from '@/store';
-import Apis from '@/app/index';
 
 import {
   updateMediaInputs,
@@ -27,7 +26,6 @@ import {
   setDevicePermissions,
 } from '@/store/slices/device';
 import logger from '@/utils/logger';
-import { Configuration, SceneMap } from '@/config';
 
 export const ABORT_VISIBILITY_CHANGE = 'abortVisibilityChange';
 export interface FormProps {
@@ -36,13 +34,15 @@ export interface FormProps {
   publishAudio: boolean;
 }
 
-export const useVisionMode = () => {
-  const scene = useSelector((state: RootState) => state.room.scene);
-  return {
-    isVisionMode: SceneMap?.[scene]?.llmConfig?.VisionConfig?.Enable,
-    isScreenMode: SceneMap?.[scene]?.llmConfig?.VisionConfig?.SnapshotConfig?.StreamType === 1,
-  };
-};
+export const useScene = () => {
+  const { scene, sceneConfigMap } = useSelector((state: RootState) => state.room);
+  return sceneConfigMap[scene] || {};
+}
+
+export const useRTC = () => {
+  const { scene, rtcConfigMap } = useSelector((state: RootState) => state.room);
+  return rtcConfigMap[scene] || {};
+}
 
 export const useDeviceState = () => {
   const dispatch = useDispatch();
@@ -164,25 +164,25 @@ export const useGetDevicePermission = () => {
 
 export const useJoin = (): [
   boolean,
-  (formValues: FormProps, fromRefresh: boolean) => Promise<void | boolean>
+  () => Promise<void | boolean>
 ] => {
   const devicePermissions = useSelector((state: RootState) => state.device.devicePermissions);
   const room = useSelector((state: RootState) => state.room);
-  const scene = room.scene;
 
   const dispatch = useDispatch();
 
+  const { id } = useScene();
   const { switchMic } = useDeviceState();
   const [joining, setJoining] = useState(false);
   const listeners = useRtcListeners();
 
   const handleAIGCModeStart = async () => {
     if (room.isAIGCEnable) {
-      await RtcClient.stopAgent();
+      await RtcClient.stopAgent(id);
       dispatch(clearCurrentMsg());
-      await RtcClient.startAgent(scene);
+      await RtcClient.startAgent(id);
     } else {
-      await RtcClient.startAgent(scene);
+      await RtcClient.startAgent(id);
     }
     dispatch(updateAIGCState({ isAIGCEnable: true }));
   };
@@ -201,37 +201,16 @@ export const useJoin = (): [
       return;
     }
 
-    const { appId } = await Apis.Basic.getRtcInfo();
-
-    const { Token, RoomId, UserId } = Configuration;
-    let token = Token;
-    if (!token) {
-      // 通过 API 生成 Token, 这要求您在 /Server/sensitive.js 下填写 RTC_INFO.appId 和 RTC_INFO.appKey。
-      // 您也可以手动生成 Token, 并修改 /src/config/config.ts 中的 RoomId、UserId、Token 字段。
-      // 查阅 README 获取更多信息。
-      const res = await Apis.Basic.generateRtcAccessToken({
-        roomId: RoomId,
-        userId: UserId,
-      });
-      token = res.token;
-    }
-
     setJoining(true);
 
     /** 1. Create RTC Engine */
-    const engineParams = {
-      appId,
-      roomId: RoomId,
-      uid: UserId,
-    };
-    await RtcClient.createEngine(engineParams);
+    await RtcClient.createEngine();
 
     /** 2.1 Set events callbacks */
     RtcClient.addEventListeners(listeners);
 
     /** 2.2 RTC starting to join room */
-    await RtcClient.joinRoom(token!, UserId);
-    console.log(' ------ userJoinRoom\n', `roomId: ${RoomId}\n`, `uid: ${UserId}`);
+    await RtcClient.joinRoom();
     /** 3. Set users' devices info */
     const mediaDevices = await RtcClient.getDevices({
       audio: true,
@@ -240,10 +219,10 @@ export const useJoin = (): [
 
     dispatch(
       localJoinRoom({
-        roomId: RoomId,
+        roomId: RtcClient.basicInfo.room_id,
         user: {
-          username: UserId,
-          userId: UserId,
+          username: RtcClient.basicInfo.user_id,
+          userId: RtcClient.basicInfo.user_id,
         },
       })
     );
@@ -273,6 +252,7 @@ export const useJoin = (): [
 
 export const useLeave = () => {
   const dispatch = useDispatch();
+  const { id } = useScene();
 
   return async function () {
     await Promise.all([
@@ -280,6 +260,7 @@ export const useLeave = () => {
       RtcClient.stopScreenCapture,
       RtcClient.stopVideoCapture,
     ]);
+    await RtcClient.stopAgent(id);
     await RtcClient.leaveRoom();
     dispatch(clearHistoryMsg());
     dispatch(clearCurrentMsg());

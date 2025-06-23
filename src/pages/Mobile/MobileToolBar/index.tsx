@@ -6,33 +6,24 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { memo, useEffect, useState } from 'react';
 import { VideoRenderMode } from '@volcengine/rtc';
-import { IconRight } from '@arco-design/web-react/icon';
-import { useDeviceState, useVisionMode } from '@/lib/useCommon';
+import { useDeviceState, useScene } from '@/lib/useCommon';
 import { RootState } from '@/store';
 import RtcClient from '@/lib/RtcClient';
 
 import { updateShowSubtitle } from '@/store/slices/room';
-import styles from './index.module.less';
 import SettingsDrawer from '../SettingsDrawer';
-import AISettings from '@/components/AISettings';
+import styles from './index.module.less';
 
 function MobileToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
   const dispatch = useDispatch();
 
-  const { isScreenMode } = useVisionMode();
   const room = useSelector((state: RootState) => state.room);
   const { isShowSubtitle } = room;
   const [open, setOpen] = useState(false);
-  const [openAISettings, setOpenAISettings] = useState(false);
   const [subTitleStatus, setSubTitleStatus] = useState(isShowSubtitle);
 
+  const { isScreenMode } = useScene();
   const { isVideoPublished, isScreenPublished } = useDeviceState();
-
-  const handleSetting = () => {
-    setOpen(true);
-  };
-
-  const handleOpenDrawer = () => setOpenAISettings(true);
 
   const switchSubtitle = () => {
     setSubTitleStatus(!subTitleStatus);
@@ -56,19 +47,6 @@ function MobileToolBar(props: React.HTMLAttributes<HTMLDivElement>) {
 
   return (
     <div className={styles.wrapper}>
-      <div>
-        <div className={styles.setting} onClick={handleSetting}>
-          ...
-        </div>
-        <div className={styles.aiSetting} onClick={handleOpenDrawer}>
-          {room.scene} <IconRight />
-        </div>
-        <AISettings
-          open={openAISettings}
-          onCancel={() => setOpenAISettings(false)}
-          onOk={() => setOpenAISettings(false)}
-        />
-      </div>
       <div>
         <div
           className={`${styles.subtitle} ${subTitleStatus ? styles.showSubTitle : ''}`}

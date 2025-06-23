@@ -8,16 +8,16 @@ import AudioLoading from '@/components/Loading/AudioLoading';
 import { RootState } from '@/store';
 import RtcClient from '@/lib/RtcClient';
 import { setInterruptMsg } from '@/store/slices/room';
-import { useDeviceState } from '@/lib/useCommon';
+import { useDeviceState, useScene } from '@/lib/useCommon';
 import { COMMAND } from '@/utils/handler';
 import style from './index.module.less';
-import { Configuration } from '@/config';
 
 const THRESHOLD_VOLUME = 18;
 
 function AudioController(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className, ...rest } = props;
   const dispatch = useDispatch();
+  const { isInterruptMode, botName } = useScene();
   const room = useSelector((state: RootState) => state.room);
   const volume = room.localUser.audioPropertiesInfo?.linearVolume || 0;
   const { isAudioPublished } = useDeviceState();
@@ -26,7 +26,10 @@ function AudioController(props: React.HTMLAttributes<HTMLDivElement>) {
   const isLoading = volume >= THRESHOLD_VOLUME && isAudioPublished;
 
   const handleInterrupt = () => {
-    RtcClient.commandAgent(COMMAND.INTERRUPT);
+    RtcClient.commandAgent({
+      agentName: botName,
+      command: COMMAND.INTERRUPT,
+    });
     dispatch(setInterruptMsg());
   };
   return (
@@ -34,7 +37,7 @@ function AudioController(props: React.HTMLAttributes<HTMLDivElement>) {
       {isAudioPublished ? (
         isAIReady && isAITalking ? (
           <div className={style.interruptContainer}>
-            {Configuration.InterruptMode ? <div>语音打断 或 </div> : null}
+            {isInterruptMode ? <div>语音打断 或 </div> : null}
             <div onClick={handleInterrupt} className={style.interrupt}>
               <div className={style.interruptIcon} />
               <span>点此打断</span>

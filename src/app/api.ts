@@ -8,13 +8,8 @@
  */
 export const BasicAPIs = [
   {
-    action: 'getRtcInfo',
-    apiPath: '/rtc-info',
-    method: 'post',
-  },
-  {
-    action: 'generateRtcAccessToken',
-    apiPath: '/rtc-token',
+    action: 'getScenes',
+    apiPath: '/getScenes',
     method: 'post',
   },
 ] as const;

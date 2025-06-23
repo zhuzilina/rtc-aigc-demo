@@ -10,7 +10,7 @@ import {
   NetworkQuality,
   RemoteAudioStats,
 } from '@volcengine/rtc';
-import { Configuration, Scenes } from '@/config';
+import RtcClient from '@/lib/RtcClient';
 
 export interface IUser {
   username?: string;
@@ -36,6 +36,24 @@ export interface Msg {
   isInterrupted?: boolean;
 }
 
+export interface SceneConfig {
+  id: string;
+  icon?: string;
+  name?: string;
+  questions?: string[];
+  botName: string;
+  isVision: boolean;
+  isScreenMode: boolean;
+  isInterruptMode: boolean;
+}
+
+export interface RTCConfig {
+  AppId: string;
+  RoomId: string;
+  UserId: string;
+  Token: string;
+}
+
 export interface RoomState {
   time: number;
   roomId?: string;
@@ -47,9 +65,17 @@ export interface RoomState {
    */
   isJoined: boolean;
   /**
-   * @brief 选择的模式
+   * @brief 选择的场景
    */
   scene: string;
+  /**
+   * @brief 场景下的配置
+   */
+  sceneConfigMap: Record<string, SceneConfig>;
+  /**
+   * @brief RTC 相关的配置
+   */
+  rtcConfigMap: Record<string, RTCConfig>;
 
   /**
    * @brief AI 通话是否启用
@@ -111,7 +137,9 @@ export interface RoomState {
 
 const initialState: RoomState = {
   time: -1,
-  scene: Scenes[0].name,
+  scene: '',
+  sceneConfigMap: {},
+  rtcConfigMap: {},
   remoteUsers: [],
   localUser: {
     publishAudio: false,
@@ -175,7 +203,21 @@ export const roomSlice = createSlice({
     },
 
     updateScene: (state, { payload }) => {
-      state.scene = payload.scene;
+      state.scene = payload;
+    },
+
+    updateSceneConfig: (state, { payload }) => {
+      state.sceneConfigMap = payload;
+    },
+
+    updateRTCConfig: (state, { payload }) => {
+      state.rtcConfigMap = payload;
+      RtcClient.basicInfo = {
+        app_id: payload[state.scene].AppId,
+        room_id: payload[state.scene].RoomId,
+        user_id: payload[state.scene].UserId,
+        token: payload[state.scene].Token,
+      };
     },
 
     updateLocalUser: (state, { payload }: { payload: Partial<LocalUser> }) => {
@@ -241,7 +283,7 @@ export const roomSlice = createSlice({
       const { paragraph, definite } = payload;
       const lastMsg = state.msgHistory.at(-1)! || {};
       /** 是否需要再创建新句子 */
-      const fromBot = payload.user === Configuration.BotName;
+      const fromBot = payload.user === state.sceneConfigMap[state.scene].botName;
       /**
        * Bot 的语句以 definite 判断是否需要追加新内容
        * User 的语句以 paragraph 判断是否需要追加新内容
@@ -330,6 +372,8 @@ export const {
   setInterruptMsg,
   updateNetworkQuality,
   updateScene,
+  updateSceneConfig,
+  updateRTCConfig,
   updateShowSubtitle,
   updateFullScreen,
   updatecustomSceneName,

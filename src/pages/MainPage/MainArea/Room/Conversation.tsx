@@ -8,10 +8,10 @@ import { useSelector } from 'react-redux';
 import { Tag, Spin } from '@arco-design/web-react';
 import { RootState } from '@/store';
 import Loading from '@/components/Loading/HorizonLoading';
-import { Configuration, SceneMap } from '@/config';
+import { isMobile } from '@/utils/utils';
+import { useScene } from '@/lib/useCommon';
 import USER_AVATAR from '@/assets/img/userAvatar.png';
 import styles from './index.module.less';
-import { isMobile } from '@/utils/utils';
 
 const lines: (string | React.ReactNode)[] = [];
 
@@ -23,13 +23,14 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
   const { isAITalking, isUserTalking, scene } = useSelector((state: RootState) => state.room);
   const isAIReady = msgHistory.length > 0;
   const containerRef = useRef<HTMLDivElement>(null);
+  const { botName, icon } = useScene();
 
   const isUserTextLoading = (owner: string) => {
     return owner === userId && isUserTalking;
   };
 
   const isAITextLoading = (owner: string) => {
-    return owner === Configuration.BotName && isAITalking;
+    return owner === botName && isAITalking;
   };
 
   useEffect(() => {
@@ -58,7 +59,7 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
       )}
       {msgHistory?.map(({ value, user, isInterrupted }, index) => {
         const isUserMsg = user === userId;
-        const isRobotMsg = user === Configuration.BotName;
+        const isRobotMsg = user === botName;
         if (!isUserMsg && !isRobotMsg) {
           return '';
         }
@@ -71,7 +72,7 @@ function Conversation(props: React.HTMLAttributes<HTMLDivElement>) {
             {!isMobile() && (
               <div className={styles.msgName}>
                 <div className={styles.avatar}>
-                  <img src={isUserMsg ? USER_AVATAR : SceneMap[scene].icon} alt="Avatar" />
+                  <img src={isUserMsg ? USER_AVATAR : icon} alt="Avatar" />
                 </div>
                 {isUserMsg ? '我' : scene}
               </div>

@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { VideoRenderMode } from '@volcengine/rtc';
 import { useEffect } from 'react';
 import { RootState } from '@/store';
-import { useDeviceState, useVisionMode } from '@/lib/useCommon';
+import { useDeviceState, useScene } from '@/lib/useCommon';
 import RtcClient from '@/lib/RtcClient';
 
 import styles from './index.module.less';
@@ -25,7 +25,7 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
   const { className, ...rest } = props;
   const room = useSelector((state: RootState) => state.room);
   const { isFullScreen, scene } = room;
-  const { isVisionMode, isScreenMode } = useVisionMode();
+  const { isVision, isScreenMode } = useScene();
   const { isVideoPublished, isScreenPublished, switchCamera, switchScreenCapture } =
     useDeviceState();
 
@@ -51,7 +51,7 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
 
   useEffect(() => {
     setVideoPlayer();
-  }, [isVideoPublished, isScreenPublished, isScreenMode, isFullScreen, isVisionMode]);
+  }, [isVideoPublished, isScreenPublished, isScreenMode, isFullScreen, isVision]);
 
   return (
     <div className={`${styles['camera-wrapper']} ${className}`} {...rest}>
@@ -78,7 +78,7 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
         }`}
       >
         <img
-          src={isScreenMode ? ScreenCloseNoteSVG : isVisionMode ? CameraCloseNoteSVG : UserAvatar}
+          src={isScreenMode ? ScreenCloseNoteSVG : isVision ? CameraCloseNoteSVG : UserAvatar}
           alt="close"
           className={styles['camera-placeholder-close-note']}
         />
@@ -93,7 +93,7 @@ function CameraArea(props: React.HTMLAttributes<HTMLDivElement>) {
                 </span>
                 <div>体验豆包视觉理解模型</div>
               </>
-            ) : isVisionMode ? (
+            ) : isVision ? (
               <>
                 打开
                 <span onClick={handleOperateCamera} className={styles['camera-open-btn']}>

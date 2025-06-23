@@ -2,12 +2,20 @@
  * Copyright 2025 Beijing Volcano Engine Technology Co., Ltd. All Rights Reserved.
  * SPDX-license-identifier: BSD-3-Clause
  */
-
-const merge = require('lodash/merge');
-const { LLMConfig, RTC_INFO, TTSConfig, ASRConfig } = require("./sensitive");
+const fs = require('fs');
+const path = require('path');
 
 const judgeMethodPath = (method) => {
     return (ctx, pathname) => ctx.method.toLowerCase() === method && ctx.url.startsWith(`/${pathname}`);
+}
+
+const readFiles = (dir, suffix) => {
+    const scenes = {};
+    fs.readdirSync(path.join(__dirname, dir)).map((p) => {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, dir, p)));
+        scenes[p.replace(suffix, '')] = data;
+    });
+    return scenes;
 }
 
 const assert = (expression, msg) => {
@@ -53,30 +61,8 @@ const deepAssert = (params = {}, prefix = '') => {
     }
 }
 
-const sensitiveInjector = (action, params = {}) => {
-    assert(RTC_INFO.appId, 'RTC_INFO.appId 不能为空');
-    params.AppId = RTC_INFO.appId;
-    
-    if (action === 'StartVoiceChat') {
-        const llmParams = LLMConfig[params?.Config?.LLMConfig?.Mode];
-        assert(llmParams, '使用的 LLM Mode 不存在');
-        deepAssert(llmParams, 'LLMConfig');
-        merge(params.Config.LLMConfig, llmParams);
-
-        const asrParams = ASRConfig[params?.Config?.ASRConfig?.ProviderParams?.Mode];
-        assert(asrParams, '使用的 ASR Mode 不存在');
-        deepAssert(asrParams, 'ASRConfig');
-        merge(params.Config.ASRConfig.ProviderParams, asrParams);
-
-        const ttsParams = TTSConfig[params?.Config?.TTSConfig?.Provider];
-        assert(ttsParams, '使用的 TTS Mode 不存在');
-        deepAssert(ttsParams, 'TTSConfig');
-        merge(params.Config.TTSConfig.ProviderParams, ttsParams);
-    }
-}
-
 module.exports = {
     wrapper,
     assert,
-    sensitiveInjector,
+    readFiles,
 }

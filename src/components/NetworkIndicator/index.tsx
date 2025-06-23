@@ -9,8 +9,8 @@ import { useSelector } from 'react-redux';
 import { IconArrowDown, IconArrowUp } from '@arco-design/web-react/icon';
 import { NetworkQuality } from '@volcengine/rtc';
 import { RootState } from '@/store';
+import { useScene } from '@/lib/useCommon';
 import style from './index.module.less';
-import { Configuration } from '@/config';
 
 enum INDICATOR_COLORS {
   GREAT = 'rgba(35, 195, 67, 1)',
@@ -31,11 +31,12 @@ const INDICATOR_TEXT = {
 
 function NetworkIndicator() {
   const room = useSelector((state: RootState) => state.room);
+  const { botName } = useScene();
   const networkQuality = room.networkQuality;
   const delay = room.localUser.audioStats?.rtt;
   const audioLossRateUpper = room.localUser.audioStats?.audioLossRate || 0;
   const audioLossRateLower =
-    room.remoteUsers.find((user) => user.userId === Configuration.BotName)?.audioStats
+    room.remoteUsers.find((user) => user.userId === botName)?.audioStats
       ?.audioLossRate || 0;
 
   const indicators = useMemo(() => {

@@ -3,11 +3,6 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import CustomScene from '@/config/scenes/Custom.json';
-import VirtualGirlfriend from '@/config/scenes/VirtualGirlfriend.json';
-
-export * from './config';
-
 export const Disclaimer = 'https://www.volcengine.com/docs/6348/68916';
 export const ReversoContext = 'https://www.volcengine.com/docs/6348/68918';
 export const UserAgreement = 'https://www.volcengine.com/docs/6348/128955';
@@ -27,9 +22,3 @@ export interface IScene {
   asrConfig: Record<string, any>;
   ttsConfig: Record<string, any>;
 }
-
-export const Scenes: IScene[] = [CustomScene, VirtualGirlfriend];
-export const SceneMap: Record<string, IScene> = {
-  [CustomScene.name]: CustomScene,
-  [VirtualGirlfriend.name]: VirtualGirlfriend,
-};
