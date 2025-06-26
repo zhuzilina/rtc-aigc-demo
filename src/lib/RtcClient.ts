@@ -127,9 +127,8 @@ export class RTCClient {
   };
 
   joinRoom = () => {
-    this.engine.enableAudioPropertiesReport({ interval: 1000 });
-    console.log(this.basicInfo);
-    this.engine.joinRoom(
+    console.log(' ------ userJoinRoom\n', `roomId: ${this.basicInfo.room_id}\n`, `uid: ${this.basicInfo.user_id}`);
+    return this.engine.joinRoom(
       this.basicInfo.token!,
       `${this.basicInfo.room_id!}`,
       {
@@ -146,7 +145,6 @@ export class RTCClient {
         roomProfileType: RoomProfileType.chat,
       }
     );
-    console.log(' ------ userJoinRoom\n', `roomId: ${this.basicInfo.room_id}\n`, `uid: ${this.basicInfo.user_id}`);
   };
 
   leaveRoom = () => {
