@@ -7,8 +7,6 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import Header from '@/components/Header';
 import ResizeWrapper from '@/components/ResizeWrapper';
-import Menu from './Menu';
-import { useIsMobile } from '@/utils/utils';
 import Apis from '@/app/index';
 import MainArea from './MainArea';
 import { ABORT_VISIBILITY_CHANGE, useLeave } from '@/lib/useCommon';
@@ -61,21 +59,11 @@ export default function () {
 
   return (
     <ResizeWrapper className={styles.container}>
-      <Header />
-      <div
-        className={styles.main}
-        style={{
-          padding: useIsMobile() ? '' : '24px',
-        }}
-      >
-        <div className={`${styles.mainArea} ${useIsMobile() ? styles.isMobile : ''}`}>
+      <Header hide />
+      <div className={styles.main}>
+        <div className={`${styles.mainArea} ${styles.isMobile}`}>
           <MainArea />
         </div>
-        {useIsMobile() ? null : (
-          <div className={styles.operationArea}>
-            <Menu />
-          </div>
-        )}
       </div>
     </ResizeWrapper>
   );

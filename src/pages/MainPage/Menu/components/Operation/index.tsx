@@ -5,7 +5,6 @@
 
 import { MediaType } from '@volcengine/rtc';
 import DeviceDrawerButton from '../DeviceDrawerButton';
-import Subtitle from '../Subtitle';
 import { useScene } from '@/lib/useCommon';
 import styles from './index.module.less';
 
@@ -13,9 +12,7 @@ function Operation() {
   const { isVision } = useScene();
   return (
     <div className={`${styles.box} ${styles.device}`}>
-      <Subtitle />
       {isVision && <DeviceDrawerButton type={MediaType.VIDEO} />}
-      <DeviceDrawerButton />
     </div>
   );
 }

@@ -3,45 +3,23 @@
  * SPDX-license-identifier: BSD-3-Clause
  */
 
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '@/store';
-import CheckScene from './CheckScene';
-import { SceneConfig, updateScene } from '@/store/slices/room';
+import xiaohongImg from '@/assets/img/xiaohong.png';
 import { useScene } from '@/lib/useCommon';
 import style from './index.module.less';
 
 function AIChangeCard() {
-  const { scene, sceneConfigMap } = useSelector((state: RootState) => state.room);
-  const dispatch = useDispatch();
-  const { icon, isVision } = useScene();
-  const Scenes = Object.keys(sceneConfigMap).map(key => sceneConfigMap[key]);
-
-  const handleChecked = (checkedScene: string) => {
-    dispatch(updateScene(checkedScene));
-  };
+  const { isVision } = useScene();
 
   return (
     <div className={style.card}>
       <div className={style.avatar}>
-        <img id="avatar-card" src={icon} alt="Avatar" />
+        <img id="avatar-card" src={xiaohongImg} alt="小红同学" />
       </div>
       <div className={style.title}>
-        <div>Hi，欢迎体验实时对话式 AI</div>
+        <div>你好,我是小红同学</div>
         <div className={style.desc}>
-          {isVision ? <>支持豆包 Vision 模型和 深度思考模型，</> : ''}
-          超多对话场景等你开启
+          {isVision ? <>支持豆包 Vision 模型和 深度思考模型</> : ''}
         </div>
-      </div>
-      <div className={style.sceneContainer}>
-        {Scenes.map((key: SceneConfig) =>
-          <CheckScene
-            key={key.name}
-            icon={key.icon}
-            title={key.name}
-            checked={key.id === scene}
-            onClick={() => handleChecked(key.id)}
-          />
-        )}
       </div>
     </div>
   );

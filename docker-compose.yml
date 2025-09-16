@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_LOCAL=cn
+    depends_on:
+      - backend
+    networks:
+      - ai-rtc-network
+
+  backend:
+    build: ./Server
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./Server:/app
+      - /app/node_modules
+    networks:
+      - ai-rtc-network
+
+networks:
+  ai-rtc-network:
+    driver: bridge
