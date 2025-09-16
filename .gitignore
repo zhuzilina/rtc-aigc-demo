@@ -31,5 +31,4 @@ yarn.lock
 pnpm-lock.yaml
 dist/
 log/
-/Server/scenes/Custom.json
-Server/scenes/Custom.json
+/conf/*
