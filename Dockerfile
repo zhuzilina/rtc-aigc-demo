@@ -4,7 +4,6 @@ WORKDIR /app
 
 COPY package*.json ./
 COPY message.js ./
-COPY yarn.lock ./
 
 RUN yarn config set registry https://registry.npmmirror.com/ && yarn
 
